@@ -1,0 +1,59 @@
+---
+layout: post
+title: More on IsSPBuiltInField…
+date: 2011-02-02 18:35:36.000000000 +01:00
+categories: []
+tags:
+- C#
+- LINQ
+- SharePoint
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>Some follow up on my <a href="http://www.pvle.be/2011/01/is-a-given-field-one-of-sharepoints-built-in-field/">previous post</a>…</p>
+<p>I had to work with this a bit more today, so I wrapped it up a bit to make it more convenient to work with:</p>
+<pre class="code"><span style="color: blue">public static class </span><span style="color: #2b91af">SPFieldExtension
+</span>{
+    <span style="color: blue">static </span><span style="color: #2b91af">IDictionary</span>&lt;<span style="color: #2b91af">Guid</span>, <span style="color: blue">bool</span>&gt; PublishingBuildInFields { <span style="color: blue">get</span>; <span style="color: blue">set</span>; }
+
+    <span style="color: blue">static </span>SPFieldExtension()
+    {
+        <span style="color: #2b91af">Type </span>type = <span style="color: blue">typeof</span>(<span style="color: #2b91af">FieldId</span>);
+
+        <span style="color: blue">var </span>propInfoArray = type.GetProperties(<span style="color: #2b91af">BindingFlags</span>.Static | <span style="color: #2b91af">BindingFlags</span>.Public);
+
+        <span style="color: #2b91af">SPFieldExtension</span>.PublishingBuildInFields = propInfoArray
+            .Select(prop =&gt; (<span style="color: #2b91af">Guid</span>) prop.GetValue(<span style="color: blue">null</span>, <span style="color: blue">null</span>))
+            .ToDictionary(g =&gt; g, g =&gt; <span style="color: blue">true</span>);
+    }
+
+    <span style="color: gray">/// &lt;summary&gt;
+    /// </span><span style="color: green">Check if the given field is a build in field of SharePoint (WSS and MOSS)
+    </span><span style="color: gray">/// &lt;/summary&gt;
+    /// &lt;param name=&quot;guid&quot;&gt;&lt;/param&gt;
+    </span><span style="color: blue">public static bool </span>IsSPBuiltInField(<span style="color: #2b91af">Guid </span>guid)
+    {
+        <span style="color: blue">return </span><span style="color: #2b91af">SPBuiltInFieldId</span>.Contains(guid)
+            || <span style="color: #2b91af">SPFieldExtension</span>.PublishingBuildInFields.ContainsKey(guid);
+    }
+
+    <span style="color: gray">/// &lt;summary&gt;
+    /// </span><span style="color: green">Check if the given field is a build in field of SharePoint (WSS and MOSS)
+    </span><span style="color: gray">/// &lt;/summary&gt;
+    /// &lt;param name=&quot;field&quot;&gt;&lt;/param&gt;
+    </span><span style="color: blue">public static bool </span>IsSPBuiltInField(<span style="color: blue">this </span><span style="color: #2b91af">SPField </span>field)
+    {
+        <span style="color: blue">return </span><span style="color: #2b91af">SPFieldExtension</span>.IsSPBuiltInField(field.Id);
+    }
+}</pre>
+<p>So, I created a static class to hold my two methods. One is the same a the one in the previous post, taking a Guid and returning a Boolean. The second one is an extension method for SPField that simply call the first method. It’s more continent to use it this way.</p>

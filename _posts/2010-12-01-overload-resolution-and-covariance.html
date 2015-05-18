@@ -1,0 +1,57 @@
+---
+layout: post
+title: Overload Resolution and Covariance
+date: 2010-12-01 16:28:27.000000000 +01:00
+categories: []
+tags:
+- C#
+- C# 3.0
+- C# 4.0
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>As of C# 4.0, generics support <a href="http://msdn.microsoft.com/en-us/library/ee207183.aspx">covariance and contravariance</a>. I won’t talke about contravariance in the post, however.</p>
+<p>To sum it up quickly, covariance enables implicit conversion of a generic collection of type T to the same generic collection of a type that derives from T. In short:</p>
+<pre class="code">IEnumerable&lt;<span style="color: #2b91af">Object</span>&gt; list = <span style="color: blue">new </span><span style="color: #2b91af">List</span>&lt;<span style="color: #2b91af">String</span>&gt;().AsEnumerable();</pre>
+<p>This means that as of now, any method that accepts something like IEnumerable&lt;Object&gt; can accept an IEnumerable&lt;String&gt; as well. This changes the overload resolution mechanism:</p>
+<pre class="code"><span style="color: blue">class </span><span style="color: #2b91af">A </span>{ }
+<span style="color: blue">class </span><span style="color: #2b91af">B </span>: <span style="color: #2b91af">A </span>{ }
+
+<span style="color: blue">class </span><span style="color: #2b91af">T
+</span>{
+    <span style="color: blue">internal void </span>Foo(IEnumerable&lt;<span style="color: #2b91af">B</span>&gt; sequence)
+    {
+        <span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;In T.Foo.B&quot;</span>);
+    }
+}
+
+<span style="color: blue">class </span><span style="color: #2b91af">U </span>: <span style="color: #2b91af">T
+</span>{
+    <span style="color: blue">internal void </span>Foo(IEnumerable&lt;<span style="color: #2b91af">A</span>&gt; sequence)
+    {
+        <span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;In U.Foo.A&quot;</span>);
+    }
+}</pre>
+<p>In the following code, how does the method resolution changes?</p>
+<pre class="code"><span style="color: #2b91af">U </span>u = <span style="color: blue">new </span><span style="color: #2b91af">U</span>();
+
+<span style="color: blue">var </span>l = <span style="color: blue">new </span><span style="color: #2b91af">List</span>&lt;<span style="color: #2b91af">A</span>&gt;();
+<span style="color: blue">var </span>m = <span style="color: blue">new </span><span style="color: #2b91af">List</span>&lt;<span style="color: #2b91af">B</span>&gt;();
+
+u.Foo(l);
+u.Foo(m);</pre>
+<p>If ran in Visual Studio as a .NET 3.5 application, here is the result:</p>
+<p><a href="http://www.pvle.be/wp-content/2010/12/Overload35.png"><img style="background-image: none; border-bottom: 0px; border-left: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top: 0px; border-right: 0px; padding-top: 0px" title="Overload35" border="0" alt="Overload35" src="assets/Overload35_thumb.png" width="681" height="346" /></a></p>
+<p>If ran in Visual Studio as a .NET 4.0 application, here is the result:</p>
+<p><a href="http://www.pvle.be/wp-content/2010/12/Overload40.png"><img style="background-image: none; border-bottom: 0px; border-left: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top: 0px; border-right: 0px; padding-top: 0px" title="Overload40" border="0" alt="Overload40" src="assets/Overload40_thumb.png" width="681" height="346" /></a></p>
+<p>Prior to C# 4.0, U.Foo was not a candidate for a call using a generic collection of B. However, with covariance, it is, hence the different result. So, this is no breaking change, but the behavior of an application might be affected.</p>

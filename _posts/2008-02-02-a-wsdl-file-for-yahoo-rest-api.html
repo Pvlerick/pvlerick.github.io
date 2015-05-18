@@ -1,0 +1,158 @@
+---
+layout: post
+title: A WSDL Endpoint for Yahoo! REST Api
+date: 2008-02-02 17:13:21.000000000 +01:00
+categories: []
+tags:
+- .NET
+- ASPX
+- SOAP
+- WSDL
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: pvlerick
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>As I am currently learning .NET and taking interest in <a href="http://en.wikipedia.org/wiki/Service-oriented_architecture">SOA</a>, I was searching for free web services using <a href="http://fr.wikipedia.org/wiki/WSDL">WSDL</a> as their access point.</p>
+<p>I headed for <a href="http://www.google.com">Google</a> website.</p>
+<h2>Google Search Api</h2>
+<p>I quickly reached <a href="http://code.google.com/">Google developer page</a> only to find out that the <a href="http://api.google.com/GoogleSearch.wsdl">Search API</a> was deprecated and replaced by the <a href="http://code.google.com/apis/ajaxsearch/">Google AJAX Search API</a>. The search web service is still available, but Google don&#8217;t issue key to use it anymore, making it unusable for new users like me. I found many blog posts criticizing this decision, but this is not the point here.</p>
+<p>I headed to <em>my</em> second choice search engine: <a href="http://www.yahoo.com">Yahoo!</a></p>
+<h2>Yahoo! REST Api</h2>
+<p>As you might know, <a href="http://www.yahoo.com">Yahoo!</a> provides a REST Api to use their web search service. The call is made using a simple URI with GET parameters, and the response uses a custom <a href="http://api.search.yahoo.com/WebSearchService/V1/WebSearchResponse.xsd">XML format</a>. </p>
+<p class="note">In my opinion, it is a shame that their don&#8217;t offer a WSDL entry point, as it is a <a href="http://fr.wikipedia.org/wiki/World_Wide_Web_Consortium">W3C</a> open standard. It also forces each developer to write custom XML parsing code in order to process the answer, while there are many Api to call and process responses from WSDL format services without even seeing any XML.</p>
+<p>Again, I stumbled upon may blog posts criticizing that decision, but again, it is not the point here. I had to go for <em>my</em> third search engine choice: <a href="http://www.live.com">Live Search</a> (formerly MSN Search).</p>
+<h2>Live Search</h2>
+<p>On <a href="http://dev.live.com/">Windows Live Dev</a> page, I crawled to find information on the search API. I found that the site is mess, as they recently changed name from <strong>msn</strong> to <strong>live</strong>. However, I managed to find what I was looking for: <a href="http://soap.search.msn.com/webservices.asmx?wsdl">a WSDL file</a>.</p>
+<p>After a fight with Live account setting page, I finally found a way to obtain a Application ID that is needed to get a response from their web service.</p>
+<p>I was now able to start coding my test application, at last!</p>
+<h2>First Test Application</h2>
+<p>Inspecting Live Search response format, I quickly wrote up two structs to hold search results.</p>
+<p>The first one was designed to hold a result from a search:</p>
+<pre lang="csharp">public struct SearchResult
+{
+    public string Title;
+    public string Summary;
+    public string Url;
+    public string DisplayUrl;
+    public string Date;
+}</pre>
+<p>The second one was designed to hold a set of <code>SearchResult</code> and an eventual error message:</p>
+<pre lang="csharp">public struct SearchResponse
+{
+    public List ResultSet;
+    public string Error;
+}</pre>
+<p>I added the WSDL file URI as a web reference to my project, and wrote up a function in order to call the Live Search web service:</p>
+<pre lang="csharp">public SearchResponse LiveSearch(string query)
+{
+    SearchResponse rs = new SearchResponse();
+    rs.ResultSet = new List();
+    SearchResult sr;
+    try
+    {
+        com.msn.search.soap.SearchRequest req = new com.msn.search.soap.SearchRequest();
+        com.msn.search.soap.SourceRequest[] srcreq = new com.msn.search.soap.SourceRequest();
+        srcreq = new com.msn.search.soap.SourceRequest();
+        srcreq.Source = com.msn.search.soap.SourceType.Web;
+        req.Requests = srcreq;
+        req.AppID = LiveApiID;
+        req.Query = query;
+        req.CultureInfo = "en-US";
+        foreach (com.msn.search.soap.SourceResponse response in new com.msn.search.soap.MSNSearchService().Search(req).Responses)
+        {
+            foreach (com.msn.search.soap.Result result in response.Results)
+            {
+                sr = new SearchResult();
+                sr.Title = result.Title;
+                sr.Summary = result.Summary;
+                sr.Url = result.Url;
+                sr.DisplayUrl = result.DisplayUrl;
+                if (result.DateTime != null) sr.Date = result.DateTime.ToString();
+                rs.ResultSet.Add(sr);
+            }
+        }
+    }
+    catch (SoapException soapex)
+    {
+        rs.ResultSet.Clear();
+        rs.Error = soapex.Detail.InnerText;
+    }
+    catch (Exception ex)
+    {
+        rs.ResultSet.Clear();
+        rs.Error = ex.Message;
+    }
+    return rs;
+}</pre>
+<p>A few exceptions later, my Windows Form test application was working fine. But I wanted more.</p>
+<h2>Second Test Application</h2>
+<p>During my search for a Yahoo! search Api, I stumbled upon <a href="http://www.pacificspirit.com/2005/03/02/yahoo_search_web_service_in_wsdl_20">this article</a> , that gave me an idea: why not usie .NET to build a webservice that would do the search and return results using Yahoo! REST Api?</p>
+<p>Looking at wat was <a href="http://api.search.yahoo.com/WebSearchService/V1/WebSearchResponse.xsd">returned</a> by Yahoo! REST Api, I slightly modified my initial <code>SearchResult</code> struct:</p>
+<pre lang="csharp">public struct SearchResult
+{
+    public string Title;
+    public string Summary;
+    public string Url;
+    public string ClickUrl;
+    public string DisplayUrl;
+    public string ModificationDate;
+    public string MimeType;
+    public string Source;
+}</pre>
+<p>I then created a new ASP.NET project to hold my web service, copied the two struct into the new class and wrote a function to call Yahoo! RESP Api, parse it using <a href="http://en.wikipedia.org/wiki/XPath">XPath</a> and fill the responses into a <code>SearchResponse</code>:</p>
+<pre lang="csharp">[WebMethod]
+public SearchResponse YahooSearch(string query, int maxResult)
+{
+    SearchResponse rs = new SearchResponse();
+    rs.ResultSet = new List();
+    SearchResult sr;
+    try
+    {
+        HttpWebRequest req = WebRequest.Create("http://api.search.yahoo.com/WebSearchService/V1/webSearch?appid=" + YahooApiID + "&#38;query=" + query + "&#38;results=" + maxResult.ToString()) as HttpWebRequest;
+        using (HttpWebResponse res = req.GetResponse() as HttpWebResponse)
+        {
+            XmlDocument doc = new XmlDocument();
+            XmlNamespaceManager ns = new XmlNamespaceManager(doc.NameTable);
+            ns.AddNamespace("yns", "urn:yahoo:srch");
+            doc.Load(new StreamReader(res.GetResponseStream()));
+            foreach (XmlNode node in doc.SelectNodes("/yns:ResultSet/yns:Result", ns))
+            {
+                sr = new SearchResult();
+                sr.Title = node.SelectSingleNode("yns:Title/text()", ns).Value;
+                sr.Summary = node.SelectSingleNode("yns:Summary/text()", ns).Value;
+                sr.Url = node.SelectSingleNode("yns:Url/text()", ns).Value;
+                sr.ClickUrl = node.SelectSingleNode("yns:ClickUrl/text()", ns).Value;
+                sr.DisplayUrl = node.SelectSingleNode("yns:DisplayUrl/text()", ns).Value;
+                sr.ModificationDate = node.SelectSingleNode("yns:ModificationDate/text()", ns).Value;
+                sr.MimeType = node.SelectSingleNode("yns:MimeType/text()", ns).Value;
+                rs.ResultSet.Add(sr);
+            }
+        }
+    }
+    catch (SoapException soapex)
+    {
+        rs.ResultSet.Clear();
+        rs.Error = soapex.Detail.InnerText;
+    }
+    catch (Exception ex)
+    {
+        rs.ResultSet.Clear();
+        rs.Error = ex.Message;
+    }
+    return rs;
+}</pre>
+<p class="note">I am not new to XML, but still, I had trouble with namespaces on this one. I know, I know, shame on me&#8230;</p>
+<p>Anyway, that was working! I then copied Liave Search function into the ASP.NET class in order to provide access to both services trough WSDL, and wrote up a small Windows Form application to do some testing.</p>
+<h2>Conclusion</h2>
+<p>I don&#8217;t think there is much to conclude from this experiment. To most experienced .NET developers, this will look like a piece of cake, but as I said this is all new to me. I learned some things along the way, so I think it was worth it.</p>
+<p>If you want to let me know what you think, that you found mistakes or you want to enlighten me with your knowledge, please drop a comment.</p>

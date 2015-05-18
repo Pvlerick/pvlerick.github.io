@@ -1,0 +1,50 @@
+---
+layout: post
+title: Constant in Eclipse and in Visual Studio
+date: 2009-08-13 12:37:24.000000000 +02:00
+categories: []
+tags:
+- Best Practices
+- C#
+- Constants
+- Eclipse
+- Java
+- Naming Conventions
+- Visual Studio
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p><a href="http://java.sun.com/docs/codeconv/html/CodeConventions.doc8.html">Java naming conventions</a> states that constants, declared as <em>static</em> and <em>final</em>, must be named all uppercase. Eclipse will automatically turn these guys in blue and italic. Here is an example of what it will look like in Eclipse:</p>
+<pre class="code"><span style="color: #7f0055">public class </span>Sandbox {
+    <span style="color: #7f0055">public static final </span>String <span style="color: #0000c0"><em>CONSTANT_VALUE</em> </span>= <span style="color: #2a00ff">"Hello World!"</span>;
+    
+    <span style="color: #7f0055">public static void </span>main(String[] args) {
+        System.<span style="color: #0000c0">out</span>.println(<span style="color: #0000c0"><em>CONSTANT_VALUE</em></span>);
+    }
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>That's pretty neat. You cannot miss a constant, even if it is not fully qualified (it has to be if it is from another class, of course).</p>
+<p>According to Microsoft's naming conventions, constants in C# (that use the <em><a href="http://msdn.microsoft.com/en-us/library/e6w8fe1b(VS.71).aspx">const</a></em> keyword, being compile time constants) have to be named using <a href="http://c2.com/cgi/wiki?PascalCase">Pascal Case</a>. Visual Studio doesn't color it any special way, meaning that if it is not qualified, you cannot know if it is a constant, a propertie, a variable...</p>
+<p>Here is what it looks like:</p>
+<pre class="code"><span style="color: blue">class </span><span style="color: #2b91af">Sandbox
+</span>{
+    <span style="color: blue">const </span><span style="color: #2b91af">String </span>ConstantValue = <span style="color: #a31515">"Hello World!"</span>);
+
+    <span style="color: blue">static void </span>Main(<span style="color: blue">string</span>[] args)
+    {
+        <span style="color: #2b91af">Console</span>.WriteLine(ConstantValue);
+    }
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>I find this a bit disturbing, as constant should always be easy to recognize. Well, at least that what I think. I was not able to find any option in Visual Studio to change this. A good start is to always fully qualify constants, in this case using Sandbox.ConstantValue (same advice goes for <em>this</em> keyword, I always use it, even when unnecessary).</p>
+<p>You can find some more details on this subject <a href="http://stackoverflow.com/questions/242534/c-naming-convention-for-constants">here</a> on stackoverflow.</p>

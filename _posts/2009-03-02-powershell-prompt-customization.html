@@ -1,0 +1,83 @@
+---
+layout: post
+title: PowerShell Prompt Customization
+date: 2009-03-02 20:48:42.000000000 +01:00
+categories: []
+tags:
+- PowerShell
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>I installed <a href="http://www.microsoft.com/windowsserver2003/technologies/management/powershell/default.mspx">PowerShell</a> a few month ago, but never really used it since then. Last week, I read some articles about it and decided to start using it to see what it was worth. Even if it will probably not change my life as a developer, I can say that so far it has been quite interesting.</p>
+<p>I've been using the Unix/Linux shell for some years now, and from time to time I miss it under Windows. The cmd.exe prompt is really aging and has countless limitations. It get very hard to do some things that would be really easy with a Unix prompt. Enters PowerShell, a command line utility that leverages the .NET platform. But I digress, my point is not to teach what PowerShell is nor to write an article on how to use it, there are already tons of tutorials online that will fulfil that need better than I can possibly do.</p>
+<p align="left">When you install PowerShell, you get some &quot;Windows PowerShell&quot; content added to the start menu, and when you open it you get a nice prompt window that opens up, starting in your home directory (note that the size of the window is bigger, I resized it to fit):</p>
+<p align="center"><a href="http://www.pvle.be/wp-content/2009/03/powershelldefault.png"><img style="border-right-width: 0px; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px" border="0" alt="PowerShellDefault" src="assets/powershelldefault-thumb.png" width="584" height="231" /></a></p>
+<p align="left">Now let's say that you use <a href="http://www.ghisler.com/">Total Commander</a> or any tool of that kind, or that you install <a href="http://www.hanselman.com/blog/IntroducingPowerShellPromptHere.aspx">PowerShell Prompt Here</a> tool. Using one of these, you open a PowerShell prompt somewhere. Well, you are back with the default cmd.exe size window, which is too small for any nowadays screen. If you want to a nice window like the one you get when starting PowerShell from the start menu, you'll have to modify your PowerShell profile.</p>
+<h3>Modify Your Profile</h3>
+<p align="left">When PowerShell loads, it reads a profile for that is located at <em>$profile</em> variable value. Simply type <em>$profile</em> in the PowerShell window to see where it is (or should be) located. If it does not exist, you can create it.</p>
+<p align="left">So, in order to get a nice window, you have to modify some properties of the&#160; object</p>
+<p>
+<pre lang="PowerShell">
+$a = (Get-Host).UI.RawUI 
+
+$a.ForegroundColor = "Gray" 
+$a.BackgroundColor = "Black" 
+
+$a.WindowTitle = "Windows PowerShell"</pre></p>
+<p>$b = $a.BufferSize<br />
+$b.Width = 120<br />
+$b.Height = 3000<br />
+$a.BufferSize = $b</p>
+<p>$b = $a.WindowSize<br />
+$b.Width = 120<br />
+$b.Height = 50<br />
+$a.WindowSize = $b</p>
+<p>It's pretty straightforward.</p>
+<p>Modify</p>
+<h3>The Prompt</h3>
+<p>I was not very satisfied with the prompt (showing the PWD, present working directory). In order to modify it, you simply have to define a function called &quot;prompt&quot; that returns a String. I found a nice prompt script <a href="http://www.johndcook.com/blog/2008/05/12/customizing-the-powershell-command-prompt/">there</a>, but was not satisfied with it as it hides the drive. I modified it a bit in order to show the drive's letter no matter how long the PWD is.</p>
+<p>
+<pre lang="PowerShell">
+function prompt 
+{ 
+	$m = 30 # maximum prompt length 
+	$d = 3 #size of the drive prompt to keep 
+	$str = $pwd.Path 
+
+	if ($str.length -ge $m + $d) 
+	{ 
+		# The prompt will begin with "...", 
+		# end with ">", and in between contain 
+ 		# as many of the path characters as will fit, 
+		# reading from the end of the path. 
+		$str = $str.substring(0, 3) + "(...)" + $str.substring($str.length - ($m + $d) + 4) 
+	} 
+
+	"$str > "; 
+
+}</pre></p>
+<p>Now, this is what I wanted, but using it was not satisfactory for some reason. So I figured out that what I wanted was a prompt showing the command number, and the window displaying the PWD in the title.</p>
+<p>
+<pre lang="PowerShell">
+function prompt 
+{ 
+	$str = $pwd.Path 
+	$nextId = (h -count 1).Id + 1; 
+
+	$Host.Ui.Rawui.WindowTitle = $str + " - Windows PowerShell" 
+
+	"PS (" + $nextId + ") > "; 
+}
+</pre></p>
+<p>So here it is, the prompt exactly as I wanted it.</p>

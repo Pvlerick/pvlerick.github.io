@@ -1,0 +1,24 @@
+---
+layout: post
+title: How I Finally Discovered when to use Debugger.Break()
+date: 2010-10-01 16:39:05.000000000 +02:00
+categories: []
+tags:
+- Debug
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>The existence of the <a href="http://msdn.microsoft.com/en-us/library/system.diagnostics.debugger.aspx">System.Diagnostics.Debugger</a> class is not something new to me, but I never figured out an usage for it. I never used it, and my knowledge was limited to think that it was a bit useless to code a breakpoint while you could set it in visual studio.</p>
+<p>However, this makes quite a lot of sense in some scenarios, like programs that execute too fast, or PowerShell cmdlet that you don’t have a chance to attach to.</p>
+<p>Related StackOverflow question: <a href="http://stackoverflow.com/questions/1432359/what-are-the-benefits-of-using-system-diagnostics-debugger-break-over-attach-to">http://stackoverflow.com/questions/1432359/what-are-the-benefits-of-using-system-diagnostics-debugger-break-over-attach-to</a></p>
+<p>Live and learn!</p>

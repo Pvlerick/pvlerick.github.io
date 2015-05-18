@@ -1,0 +1,66 @@
+---
+layout: post
+title: SelectMany, Sorting and Grouping Objects
+date: 2010-07-02 17:14:30.000000000 +02:00
+categories: []
+tags:
+- C#
+- LINQ
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>So here is the problem: I have a list of items that </p>
+<pre class="code"><span style="color: blue">var </span>collection = <span style="color: blue">new</span>[]
+{
+    <span style="color: blue">new </span>{ Title = <span style="color: #a31515">&quot;One&quot;</span>, References = <span style="color: #a31515">&quot;1;3&quot; </span>},
+    <span style="color: blue">new </span>{ Title = <span style="color: #a31515">&quot;Two&quot;</span>, References = <span style="color: #a31515">&quot;2;3&quot; </span>},
+    <span style="color: blue">new </span>{ Title = <span style="color: #a31515">&quot;Three&quot;</span>, References = <span style="color: #a31515">&quot;1;4&quot; </span>},
+    <span style="color: blue">new </span>{ Title = <span style="color: #a31515">&quot;Four&quot;</span>, References = <span style="color: #a31515">&quot;4&quot;</span>}
+};</pre>
+<p>The <em>References</em> fields of these object is some kind of category. What I want to do here is to have a list for each different reference (in this example: 1, 2, 3 and 4) containing all the items that are in the reference. Items will be duplicated if they are in more than one category.</p>
+<p>To sum it up, the expected output would be: One, Three, Two, One, Two, Three, Four</p>
+<p>After fooling around a bit, here is the query I came out with:</p>
+<pre class="code"><span style="color: blue">var </span>query = <span style="color: blue">from </span>c <span style="color: blue">in </span>collection
+            <span style="color: blue">from </span>d <span style="color: blue">in </span>c.References.Split(<span style="color: #a31515">';'</span>)
+            <span style="color: blue">orderby </span>d
+            <span style="color: blue">group </span>c <span style="color: blue">by </span>d <span style="color: blue">into </span>groups
+            <span style="color: blue">select </span>groups;</pre>
+<p>This does exactly what I want and produces the output I expected from the input data.</p>
+<p>However, when I use Linq, I generally use extensions methods directly and not the pretty query syntax. This is mostly because I want to understand what happens behind the scene, and I have to admit that this query was quite a beast.</p>
+<p>First, as there are two <em>from</em> clauses, there is a <em>SelectMany</em> somewhere. You probably know that <em>SelectMany</em> is a kind of the beast and that understanding it fully is quite a challenge compared to the other operators/extensions methods. Also, I thought that the <em>GroupBy</em> clause was going to be tough, as we groups <em>c</em> items by <em>d</em> which is in the other collection.</p>
+<p>I couldn’t figure out by myself how to write that query using extension methods, so I fell back on the good old Reflector that gave me a straight answer:</p>
+<pre class="code">var query = collection.SelectMany(delegate (&lt;&gt;f__AnonymousType0<string string ,> c) {
+    return c.Values.Split(new char[] { ';' });
+}, delegate (&lt;&gt;f__AnonymousType0<string string ,> c, string d) {
+    return new { c = c, d = d };
+}).OrderBy(delegate (&lt;&gt;f__AnonymousType1&lt;&lt;&gt;f__AnonymousType0<string string ,>, string&gt; &lt;&gt;h__TransparentIdentifier0) {
+    return &lt;&gt;h__TransparentIdentifier0.d;
+}).GroupBy(delegate (&lt;&gt;f__AnonymousType1&lt;&lt;&gt;f__AnonymousType0<string string ,>, string&gt; &lt;&gt;h__TransparentIdentifier0) {
+    return &lt;&gt;h__TransparentIdentifier0.d;
+}, delegate (&lt;&gt;f__AnonymousType1&lt;&lt;&gt;f__AnonymousType0<string string ,>, string&gt; &lt;&gt;h__TransparentIdentifier0) {
+    return &lt;&gt;h__TransparentIdentifier0.c;
+}).Select(delegate (IGrouping<string   ,>&lt;&gt;f__AnonymousType0<string string ,>&gt; groups) {
+    return groups;
+});</pre>
+<p>After reading that, it made much more sense. Here is what I came up with when writing it on my own:</p>
+<pre class="code"><span style="color: blue">var </span>p = collection
+    .SelectMany(c =&gt; c.References.Split(<span style="color: #a31515">';'</span>), (c, d) =&gt; <span style="color: blue">new </span>{ c, d })
+    .OrderBy(t =&gt; t.d)
+    .GroupBy(t =&gt; t.d, c =&gt; c.c);</pre>
+<p>Much more readable. The idea here is that the <em>SelectMany</em> clause outputs a sequence of anonymous types that contains the two kind of elements. This sequence is then sorted with the <em>OrderBy</em>, and finally fed trough a <em>GroupBy</em> that uses the <em>d</em> property as the grouping key and the <em>c</em> property as the project in the resulting collections. Not that difficult after all…</p>
+<p>Here is another version that is probably a bit more clear:</p>
+<pre class="code"><span style="color: blue">var </span>q = collection
+    .SelectMany(c =&gt; c.References.Split(<span style="color: #a31515">';'</span>), (c, d) =&gt; <span style="color: blue">new </span>{ Title = c.Title, Reference = d })
+    .GroupBy(c =&gt; c.Reference, c =&gt; c.Title)
+    .OrderBy(g =&gt; g.Key);</pre>
+<p>Note that this is a simplified version of the original issue. The issue itself was to do this with some <em>ListItems</em> retrieved from SharePoint. Objects were a bit more complicated, but logic is the same.</p>

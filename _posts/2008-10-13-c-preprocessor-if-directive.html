@@ -1,0 +1,60 @@
+---
+layout: post
+title: ! 'C# Preprocessor #if directive'
+date: 2008-10-13 18:57:31.000000000 +02:00
+categories: []
+tags:
+- ! '#if'
+- C#
+- preprocessor
+- Visual Studio
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>I only discovered lately that C# compiler had a <a href="http://msdn.microsoft.com/en-us/library/ed8yd1ha.aspx">preprocessor directives</a>. The only one I knew was the <strong>#region</strong> and <strong>#endregion</strong>, which is only used for aesthetical reasons in Visual Studio.</p>
+<p>The one that I was particularly interested in was the <strong>#if</strong> and <strong>#endif</strong>. When the compiler encounters a <strong>#if</strong> <em>[symbol]</em> statement (followed eventually by an <strong>#endif</strong> statement), the compiler will compile the surrounded code only if the <em>symbol</em> is defined.</p>
+<h3>Conditional (#if) directive</h3>
+<p>Let's take a small command line example:</p>
+<pre class="code"><span style="color: blue">using </span>System;
+<span style="color: blue">using </span>System.Collections.Generic;
+<span style="color: blue">using </span>System.Text;
+
+<span style="color: blue">namespace </span>PreprocessorTest
+{
+    <span style="color: blue">class </span><span style="color: #2b91af">Program
+    </span>{
+        <span style="color: blue">static void </span>Main(<span style="color: blue">string</span>[] args)
+        {
+            <span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;Hello,&quot;</span>);
+
+<span style="color: blue">#if </span>DEBUG
+            <span style="color: gray">Console.WriteLine(&quot;This is a debug line&quot;); 
+</span><span style="color: blue">#endif
+
+            </span><span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;Goodbye.&quot;</span>);
+
+            <span style="color: #2b91af">Console</span>.ReadLine();
+        }
+    }
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a>This code, when ran, will only execute the second Console.WriteLine statement only if the <em>DEBUG</em> symbol is defined. </p>
+<p>For obvious reasons, this is very useful. You can include debug code in the application and let the compiler sort what has to be included when you compile. This leads us to an important point: how is a symbol defined?</p>
+<h3>Symbol definition</h3>
+<p>There are two ways to define a symbol:</p>
+<ul>
+<li>Using a <a href="http://msdn.microsoft.com/en-us/library/yt3yck0x.aspx">#define</a> directive. Very easy to to add, but lacks in flexibility, as you will have to change the code itself when you want to build production code. Note that this statement has to be on the first line of the source code file. </li>
+<li>By passing symbols to the compiler using the <a href="http://msdn.microsoft.com/en-us/library/0feaad6z.aspx">/define</a> command line argument. This is much more flexible, as you can use the same code for debug and production code. </li>
+</ul>
+<p>One last thing that is quite interesting. Visual Studio automatically defines DEBUG and TRACE symbols in Debug configuration, while it only defines TRACE symbol in Release configuration. This can, however, be changed by going in the project properties page, in the <em>Debug</em> section:</p>
+<p><img style="align: center" height="171" alt="Visual Studio Project properties Build section" src="assets/vspreprocessor1.png" width="377" border="0" /></p>
+<p>So, by default, using the DEBUG symbol means that the surrounded code will be compiled in <em>Debug</em> mode, but ignored in <em>Release</em> mode.</p>

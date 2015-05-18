@@ -1,0 +1,25 @@
+---
+layout: post
+title: Debugging a WCF Service running in IIS, process not showing in process list
+date: 2008-10-22 17:54:12.000000000 +02:00
+categories: []
+tags:
+- Debug
+- IIS
+- WCF
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>Few days ago, I wanted to debug a WCF service hosted in IIS (on localhost). Sounds simple, just use Visual Studio &quot;Debug &gt; Attach to Process...&quot; command (Ctrl + Alt + P).</p>
+<p>However, <strong>aspnet_wp.exe</strong> (running Windows XP) was not displayed in the list of running processes (while the &quot;Show processes from all users&quot; was checked).</p>
+<p>So I started crawling the web to find why this process didn't show up in the list. And the answer was very simple: this process is not started if no request has been made yet. Simply heading to the <em>.svc</em> URI of the service started the process, which was then available in the list of processes.</p>

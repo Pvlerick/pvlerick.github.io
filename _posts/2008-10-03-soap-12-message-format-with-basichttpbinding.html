@@ -1,0 +1,41 @@
+---
+layout: post
+title: SOAP 1.2 message format with BasicHttpBinding
+date: 2008-10-03 18:50:15.000000000 +02:00
+categories: []
+tags:
+- Axis2
+- BasicHttpBinding
+- CustomBinding
+- SOAP
+- WCF
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>While testing a WCF service running in IIS with a simple Axis2 client, we encountered a content type error:</p>
+<blockquote><p>org.apache.axis2.AxisFault: Transport error: 415 Error: Cannot process the message because the content type 'application/soap+xml; charset=UTF-8; action=&quot;[...]&quot;' was not the expected type 'text/xml; charset=utf-8'.</p>
+</blockquote>
+<p>Using <a href="http://www.microsoft.com/downloads/details.aspx?FamilyId=C943C0DD-CEEC-4088-9753-86F052EC8450&amp;displaylang=en">MSSoapT</a>, we could see that the content type of the request was <em>application/soap+xml</em>.</p>
+<p>So, looks like Axis2 client is using SOAP 1.2 messages and WCF service replies using SOAP 1.1 messages. According to <a href="http://www.pluralsight.com/community/blogs/aaron/archive/2007/03/22/46560.aspx">this post</a> by <a href="http://www.pluralsight.com/community/blogs/aaron/default.aspx">Aaron Skonnard</a>, <em>BasicHttpBinding</em> uses SOAP 1.1 messages.</p>
+<p>It is not possible to specify the message encoding in the binding section of the configuration file. Hence, the only way to make the server match the client is by using a <em>CustomBinding</em> that will be like <em>BasicHttpBinding</em> but use SOAP 1.2 instead of SOAP 1.1 as message encoding.</p>
+<p>This can be easily achieved in the configuration file by adding a <em>customBinding</em> in <em>bindings section</em>:</p>
+<pre class="code"><span style="color: blue">&lt;</span><span style="color: #a31515">customBinding</span><span style="color: blue">&gt;
+  &lt;</span><span style="color: #a31515">binding </span><span style="color: red">name</span><span style="color: blue">=</span>&quot;<span style="color: blue">customHttpBinding</span>&quot;<span style="color: blue">&gt;
+    &lt;</span><span style="color: #a31515">textMessageEncoding </span><span style="color: red">messageVersion</span><span style="color: blue">=</span>&quot;<span style="color: blue">Soap12</span>&quot; <span style="color: blue">/&gt;
+    &lt;</span><span style="color: #a31515">httpTransport</span><span style="color: blue">/&gt;
+  &lt;/</span><span style="color: #a31515">binding</span><span style="color: blue">&gt;
+&lt;/</span><span style="color: #a31515">customBinding</span><span style="color: blue">&gt;</span></pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>Next, change the endpoint binding to use <em>customBinding</em> and use the <em>bindingConfiguration</em> attribute to point to the newly created binding configuration (in the example, customHttpBinding).</p>
+<p>Running the client again worked this time, and MSSoapT was showing <em>application/soap+xml</em> content type in request and response's HTTP headers.</p>

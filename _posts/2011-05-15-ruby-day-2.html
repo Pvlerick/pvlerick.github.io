@@ -1,0 +1,117 @@
+---
+layout: post
+title: Ruby, Day 2
+date: 2011-05-15 15:13:00.000000000 +02:00
+categories: []
+tags:
+- Ruby
+- Seven Languages in Seven Weeks
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<h2>Find</h2>
+<pre lang="Ruby">
+#File IO without block
+#f = File.new("testfile", "r")
+#f.close
+
+#File IO with block, implicit call to f.close
+#File.open("testfile", "r") do |aFile| end
+
+#Hash to array
+h = { 1 => 2, "cat" => "tom" }
+a = h.to_a
+
+#Array to hash
+a = (1..10).to_a
+h = Hash[a.map { |i| [i, i * 2] } ]
+
+#Iterate through a hash
+h.each { |i| puts "#{i[0]} : #{i[1]}" }
+
+#Use array as stack
+a.push 19
+a.pop
+
+#Arrays can be used as: stacks, sets, queues, dequeues, and fifos
+</pre>
+<h2>Do</h2>
+<p>Print the content of an array of sixteen numbers, four numbers at a time, using just each. Now, do the same with each_slice in Enumerable:</p>
+<pre lang="Ruby">#Using each (interesting fact: there is a closure on a here)
+a.each { |i| if i % 4 == 0 then puts "#{a[i-4..i-1]}" end }
+
+#Using each_slice 
+a.each_slice(4) { |s| puts "#{s}" }</pre>
+<p>Rewrite the Tree class so it can be initialized with a nested structure with hashes and arrays:</p>
+<pre lang="Ruby">#Initial code from the book
+class Tree
+  attr_accessor :children, :node_name
+  
+  def initialize(name, children=[])
+    @children = children
+    @node_name = name
+  end
+  
+  def visit_all(&block)
+    visit &block
+    @children.each { |c| c.visit_all &block }
+  end
+  
+  def visit(&block)
+    block.call self
+  end
+end
+
+t = Tree.new("Ruby", [Tree.new("Gem")])
+t.visit_all { |t| puts "#{t.node_name}" }
+</pre>
+<p>Starting from that, this is what we want to be able to write:</p>
+<pre lang="Ruby">
+Tree.new({ 'grandpa' => { 'dad' => { 'child 1' => {}, 'child 2' => {} }, 'uncle' => { 'child 3' => {}, 'child 4' => {} } } })
+</pre>
+<p>And here is my solution to it:</p>
+<pre lang="Ruby">
+class Tree
+  attr_accessor :children, :node_name
+  
+  def initialize(structure)
+    structure.each do
+      |key, value|
+      @node_name = key
+      @children = value.to_a.map { |e| Tree.new({ e[0] => e[1] }) }
+    end
+  end
+  
+  def visit_all(&block)
+    visit &block
+    @children.each { |c| c.visit_all &block }
+  end
+  
+  def visit(&block)
+    block.call self
+  end
+end
+
+t = Tree.new({ 'grandpa' => { 'dad' => { 'child 1' => {}, 'child 2' => {} }, 'uncle' => { 'child 3' => {}, 'child 4' => {} } } })
+t.visit_all { |t| puts "#{t.node_name}" }
+</pre>
+<p>Write a simple grep that will print the lines of a file having any occurrences of a phrase anywhere in that line. Use Regular Expressions and include line numbers:</p>
+<pre lang="Ruby">
+regex = Regexp.new('sit amet')
+ln = 0
+
+IO.foreach("TestGrep.txt") do |line|
+  ln = ln + 1
+  puts "#{ln}: #{line}" if regex.match(line)
+end
+</pre>

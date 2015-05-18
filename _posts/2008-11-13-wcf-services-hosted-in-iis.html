@@ -1,0 +1,43 @@
+---
+layout: post
+title: WCF Services hosted in IIS
+date: 2008-11-13 19:39:40.000000000 +01:00
+categories: []
+tags:
+- .NET
+- IIS
+- WCF
+- Windows Server 2003
+- Windows XP
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+</p>
+<p>Lately, I had some trouble hosting WCF Services on IIS on a remote VM running Windows Server 2003. Nothing really serious, but I figured out that it wouldn't be bad to write down these errors for future reference.</p>
+<h3>Enabling hosting of WCF Services on IIS</h3>
+<p>This is probably trivial, but I'm still writing it here so I can refer to it later.</p>
+<p>First, if the .NET 2.0 Framework was installed prior to IIS, IIS is not registered with ASP.NET. It can be done manually running the following command:</p>
+<p>C:\WINDOWS\Microsoft.NET\Framework\v2.0.50727&gt;aspnet_regiis -i</p>
+<p>Then, you have to register <em>.svc</em> files in IIS, which is done by running the following command:</p>
+<p>C:\WINDOWS\Microsoft.NET\Framework\v3.0\Windows Communication Foundation&gt;ServiceModelReg.exe -i</p>
+<p>Once this is done, simply run <em>iisreset</em> in any command line window to restart IIS.</p>
+<p>That's it, IIS can now host WCF services.</p>
+<p>Please note that if you deploy your website directly from Visual Studio, you'll have to make sure that Frontpage Server Extensions are installed on the server.</p>
+<h3>Hosting a WCF Service in IIS</h3>
+<p>Anyway, hosting the service is very easy. The service endpoint will be a .svc file in which you'll have to write only one line, referencing the service that is to be hosted.</p>
+<pre class="code">&lt;%@ ServiceHost Service=&quot;MyService&quot; %&gt;</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>On top of that, the Web.config file has to be modified in order to contain the service's information like you would do in any WCF host application (ABC, except that you leave the address empty as the endpoint is the uri of the .svc file).</p>
+<h3>Permission Issues</h3>
+<p>If the service you are hosting interacts in some way with the file system or any other operation that might require permissions, don't forget that once they are in IIS, they will have the limited rights of ASPNET (XP) or NETWORK SERVICE (WS2003) account, depending on the operating system.</p>
+<p>I'm highlighting this because prior to host my services in IIS, I hosted them in a command line window. This is handy for debugging, and very simple to set up. However, this means that the WCF services are running with lots of privileges (power user or administrator, as you are developing). Once in IIS, you can still debug easily by attaching to the IIS process (Ctrl + Alt + P in Visual Studio).</p>

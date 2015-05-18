@@ -1,0 +1,76 @@
+---
+layout: post
+title: Vista Complete PC Backup and Restore
+date: 2008-09-06 15:01:57.000000000 +02:00
+categories: []
+tags:
+- Backup
+- Restore
+- Vista
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>Some time ago, while reading comments on <a href="http://www.codinghorror.com/blog/archives/001045.html">this post</a> from Coding Horror, I discovered that there was a <a href="http://www.microsoft.com/windows/windows-vista/features/backup.aspx">Complete PC Backup and Restore</a> tool build-in in Windows Vista (well, at least some of versions of Vista).</p>
+<p>What a fantastic feature! In a few click, you can make a copy of your current system. then, if something goes wrong, you can restore it, even on an other hard drive or/and computer if needed.</p>
+<p>At least, that's what they say. But if you actually tried this, you may have ran into some issues. However, I managed to get this working and I'm now writing on my system that has been moved from one disk to an other.</p>
+<h3>Background</h3>
+<p>A bit more than two years ago, I bought a complete new PC. As hard drive, I chose a Western Digital 76Gb Raptor. It was a bit expensive, but according to the tests, it was well worth it.</p>
+<p>I must say that I was very satisfied about the drive. It was a bit noisy, but inside my <a href="http://www.antec.com/us/productDetails.php?ProdID=81500">Antec P150</a> case it didn't make much noise.</p>
+<p>But after some time, I started having read problem on the drive. The computer stopped responding, and could not boot if reset, stating that a read error occurred, or event not displaying the drive at all. I bought a second drive, some WD 320Gb drive (that I'm using as primary drive today), and re-installed the system on it.</p>
+<p>I still had some problem then, the computer refused to work with two hard drives at the same time. I still don't know what was the problem, but that is another story.</p>
+<p>Anyway, a month ago, I bought a nearly new PC (CPU, GFX Card, RAM and was forced to buy a new case as the power supply of the P150 was not strong enough for my new 260 GTX), but kept my old drives as they were still okay. I installed Vista Ultimate that I received at some Microsoft event, and everything ran smoothly. I finally had a working computer at home.</p>
+<p>For a week or so...</p>
+<p>The reading error appeared again. This time, there was no doubt, the Raptor was guilty.</p>
+<p>I decided to send it back to Western Digital, and to copy my current system on the other drive.</p>
+<h3>First Attempt: Backup image is on the same (physical) drive</h3>
+<p>In my configuration, I had two hard drives available:</p>
+<ul>
+<li>76Gb WD Raptor as primary drive, 39Gb partition for the system, the remaining space allowed to a game partition; </li>
+<li>320Gb WD as data drive, a 100Gb empty partition and the remaining space left for some data. </li>
+</ul>
+<p>My plan was simple:</p>
+<ol>
+<li>Make a complete PC backup of the system drive (first Raptor partition) on the second partition of the second drive; </li>
+<li>Remove the Raptor from the case; </li>
+<li>Boot on Vista install DVD and run setup to do a complete PC restore of the backup image on the first partition of the second drive. </li>
+</ol>
+<p>You can see the actual steps with screenshots on <a href="http://www.bleepingcomputer.com/tutorials/tutorial144.html">this tutorial</a>.</p>
+<p>The first two steps went well, but third step failed. I received some &quot;<strong>The parameter is incorrect. (0x80070057)</strong>&quot; error. After some search, I found this <a href="http://blogs.technet.com/filecab/archive/2008/03/12/common-causes-and-solutions-to-backup-system-restore-and-complete-pc-backup-problems-updated.aspx">interesting post</a> that lists common causes and solutions to backup and restore tools from Vista.</p>
+<p>However, even if the error number is the same, the error listed is about <em>File Restore</em>, not <em>Complete PC Restore</em>.</p>
+<p>I figured out that this was related to the fact that I only had one hard drive, as the setup never actually asked me about partitions.</p>
+<h3>Second Attempt: Backup image is on an external USB drive</h3>
+<p>I plugged the Raptor in the PC again and booted Vista. I plugged an WD Passport 250Gb drive in on of the USB port, and did a Complete PC Backup of the system partition on that external drive.</p>
+<p>Once again, I stopped the computer, removed the Raptor and booted on Vista install DVD.</p>
+<p>This time, the restore complained again, but with an other error. The error was: &quot;<strong>A data disk is currently set as active in BIOS. Set some other disk as active or</strong> <strong>use the DiskPart utility</strong> <strong>to clean the data disk, and then retry the restore operation. (0x80042406)</strong>&quot;.</p>
+<p>Googleing on that gave me <a href="http://www.vistax64.com/vista-installation-setup/160414-complete-pc-restore-error-0x80042406.html">this page</a>, which held some clues on how to resolve this. Apparently I had to run <strong>clean</strong> command on the drive I wanted to restore to, using <a href="http://support.microsoft.com/kb/300415/en-us">Diskpart</a> utility.</p>
+<p>As you can use the command line in the restore menu of the Vista DVD, I headed there and ran Diskpart. I typed in &quot;select disk=0&quot; to select the first disk. Then I typed in &quot;clean&quot;, which took a few seconds. apparently that was successful. However, doing some &quot;select partition&quot; command after that taught me that <strong>my whole drive was gone</strong> with the <strong>clean</strong> command. So, that command erases all partitions on the drive. Hopefully, nothing important on that second data partition...</p>
+<p>Back to the Complete PC Restore utility in the Vista DVD menu, this time it worked. Finally, I was having that progress bar saying that disk C: was being restored.</p>
+<p>I went away from the computer while the restore process took place.</p>
+<p>When I came back, the progress bar was <em>nearly</em> full, and en error message was saying that some I/O error happened. Well, I guess this can happen sometimes with USB powered external drives... I ran the operation again (going trough Diskpart again, of course), went away again, came back and saw the same error.</p>
+<p>Damn, I thought, is this thing working at <em>all</em>?</p>
+<h3>Third Attempt: Backup image is on an NAS drive</h3>
+<p>I still had one card up my sleeve. I own a <a href="http://www.qnap.com/pro_detail_feature.asp?p_id=67">QNAP TS-101</a> that holds a 500Gb drive (a Samsung drive that I find very noisy, they didn't have any WD left when I bought it).</p>
+<p>In one of my previous attempt, I noticed that on top of the images found by the restore tool, you can specify a location yourself. And this location can be on the network.</p>
+<p>As this was a few days after, I wanted to make a new backup image of the system. However, when creating a backup image, you can only select hard drives or DVDs as location for the backup... I selected the second partition of the Raptor disk (reminder: the other disk is gone due to the clean command). I then started <a href="http://filezilla-project.org/">FileZilla</a> as administrator (otherwise the files cannot be seen in FileZilla) and uploaded the WindowsImageBackup directory on the NAS drive.</p>
+<p>Once more, I opened the case, remove the Raptor drive, booted on the Vista DVD and followed the restore procedure.</p>
+<p>When the setup scanned for images on the drives, I promptly clicked the &quot;Skip&quot; button, then was able to connect to the network. Although it didn't find anything on the network, I was asked to enter the location of the backup image. I entered the network location, and the setup found the image.</p>
+<p>A few clicks later, the restore process then started. I went away again.</p>
+<p>When I came back, the screen was displaying the Vista login screen! At last, it worked. I logged in and found my system exactly as it was when I backed it up.</p>
+<p>I went to check the state of the drive in the disk manager utility, out of curiosity. I realized that the restore process created a partition of the exact same size as the one I backed-up, and left all the remaining space unallocated.</p>
+<h3>Conclusion</h3>
+<p>Here are the things to remember from this experiment:</p>
+<ul>
+<li>You need a spare drive to restore your system on. Even if you only backed up a partition of a drive, the restore process needs a full drive to restore. It will create a partition of the size of the backed up partition, and leave the remaining space as un-partitioned space. </li>
+<li>You should avoid using a USB powered disk as storage for image backup. However, according to <a href="http://blogs.technet.com/mkleef/archive/2008/05/29/windows-vista-complete-pc-backup-hey-it-works.aspx">this post</a> (which is a more successful story than my own), an external drive is ok.</li>
+</ul>

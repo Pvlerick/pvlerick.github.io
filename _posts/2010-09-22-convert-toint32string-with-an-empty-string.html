@@ -1,0 +1,45 @@
+---
+layout: post
+title: Convert.ToInt32(String) With an Empty String
+date: 2010-09-22 17:31:42.000000000 +02:00
+categories: []
+tags:
+- C#
+- Convert
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>Lately, I have been struggling with the <em>Convert.ToInt32</em> overload that takes a String as a parameter. Basically, it’s the same as <em>Int32.Parse</em>, except that if the given String is null, it returns 0 instead of throwing a <em>FormatException</em>. That’s quite cool, but <em>Convert.ToInt32</em> still throws when the argument is an empty String…</p>
+<p>Now, my particular case is that I’m retrieving data from Sharepoint, and that the field retrieved can be empty if the user left it blank (when retrieving the field trough a DataTable).</p>
+<p>The workaround to that issue is actually pretty silly: just add a 0 at the beginning of the parsed String, and it will work all the time (and return 0 when the string is empty, as it does with <em>null</em>). Now mind you, this only works with positive integers. If your integer is negative, adding a 0 in front of it will make the Convert.ToInt32 throw a <em>FormatException</em> again…</p>
+<pre class="code"><span style="color: #2b91af">String </span>theInt = <span style="color: #a31515">&quot;&quot;</span>;
+
+<span style="color: green">//Throws...
+</span><span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #2b91af">Convert</span>.ToInt32(theInt));
+
+<span style="color: green">//Doesn't throw
+</span><span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #2b91af">Convert</span>.ToInt32(<span style="color: #a31515">&quot;0&quot; </span>+ theInt));
+
+
+theInt = <span style="color: #2b91af">Int32</span>.MaxValue.ToString();
+
+<span style="color: green">//Doesn't throw
+</span><span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #2b91af">Convert</span>.ToInt32(<span style="color: #a31515">&quot;0&quot; </span>+ theInt));
+
+
+theInt = <span style="color: #2b91af">Int32</span>.MinValue.ToString();
+
+<span style="color: green">//Throws again...
+</span><span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #2b91af">Convert</span>.ToInt32(<span style="color: #a31515">&quot;0&quot; </span>+ theInt));</pre>
+<p>So, this is safe to use if you are certain that the integer in the String is always positive.</p>
+<p>PS: note that I always write String with a capital S in my code (and in text), this is a habit left from Java I guess…</p>

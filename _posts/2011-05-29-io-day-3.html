@@ -1,0 +1,51 @@
+---
+layout: post
+title: Io, Day 3
+date: 2011-05-29 18:37:30.000000000 +02:00
+categories: []
+tags:
+- Io
+- Seven Languages in Seven Weeks
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>Final day with Io. It’s been quite a ride, and even if I don’t think I grasp everything that Io is, I consider playing with Io a little bit on my own later because of it’s potential, especially in <a href="http://en.wikipedia.org/wiki/Domain-specific_language">DSL</a>.</p>
+<h5>Enhance the XML program to add spaces to show the indentation structure</h5>
+<pre lang="IO">
+Builder := Object clone
+Builder depth := 0
+
+Builder forward := method(
+  prefix := "  " repeated(self depth)
+  writeln(prefix, "<", call message name, ">")
+  self depth = self depth + 1
+  call message arguments foreach(arg,
+    content := self doMessage(arg)
+    if(content type == "Sequence", writeln(prefix, "  ", content))
+  )
+  self depth := self depth - 1
+  writeln(prefix, "</", call message name, ">")
+)
+
+Builder html(head(title("Programing languages")), body(ul(li("IO"), li("Lua"), li("JavaScript"))))
+</pre>
+<h5>Create a list syntax that uses brackets</h5>
+<pre lang="IO">
+curlyBrackets := method(
+  l := List clone
+  call message arguments foreach(arg,
+    l append(doMessage(arg))
+  )
+  return l
+)
+</pre>

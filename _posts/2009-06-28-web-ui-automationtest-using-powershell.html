@@ -1,0 +1,135 @@
+---
+layout: post
+title: Web UI Automation and Test using PowerShell
+date: 2009-06-28 16:44:39.000000000 +02:00
+categories: []
+tags:
+- Automation
+- PowerShell
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>Lately, I had to do lots of repetitive tasks at work in order to fix defects in an application. As I grew tired of filling numerous forms with the mandatory data needed for them to validate, I thought that I could maybe use PowerShell to automate the form-filling process.</p>
+<p>I very quickly stumbled upon an MSDN article titled <a href="http://msdn.microsoft.com/en-us/magazine/cc337896.aspx">Web UI Automation with Windows PowerShell</a>. It was definitely the way to go, but I was not really satisfied with everything I found over there.</p>
+<h3>Getting a Brower object</h3>
+<p>This part is similar to the one used in the MSDN article.</p>
+<pre lang="PowerShell">$global:ie = New-Object -com "InternetExplorer.Application"
+$global:ie.Navigate("about:blank")
+$global:ie.visible = $true</pre>
+<p>Please note that I will use <em>$global:ie</em> and <em>$global:doc</em> all the time, as global variables. I could have used <em>$script:</em> scope variables, but global are better for this task. Here, we are building a bunch of reusable function; declaring these variables as <em>$global:</em> ensures that the variables will be available in scripts that include this utility script. See <a href="http://blogs.msdn.com/powershell/archive/2007/04/14/controlling-the-scope-of-variables.aspx">here</a> for more information on PowerShell variable scopes.</p>
+<p>So this, sets <em>$global:ie</em> to a COM Internet Explorer object, navigates to "about:blank" and makes the window visible. Now we need some helper functions to navigate, fill forms and click elements easily.</p>
+<h3>Helper Functions to Navigate, Click, etc...</h3>
+<p>First of all, we need a method that yields the script while the current page is loading. So, what it should do is simple: wait for the current page to be loaded then set the <em>$global:doc</em> variable to the loaded document.</p>
+<pre lang="PowerShell">Function WaitForPage([int] $delayTime = 100)
+{
+  $loaded = $false
+  
+  while ($loaded -eq $false) {
+    [System.Threading.Thread]::Sleep($delayTime) 
+    
+    #If the browser is not busy, the page is loaded
+    if (-not $global:ie.Busy)
+    {
+      $loaded = $true
+    }
+  }
+  
+  $global:doc = $global:ie.Document
+}</pre>
+<p>I used an optional parameter here for the delay between checks of the browser's status. It's pretty straight forward, while the browser (<em>$global:ie</em>) is busy, wait. Once it's not busy anymore, assign the document to the <em>$global:doc</em> variable. Let's now define a function to navigate to a given url.</p>
+<pre lang="PowerShell">Function NavigateTo([string] $url, [int] $delayTime = 100)
+{
+  Write-Verbose "Navigating to $url";
+  
+  $global:ie.Navigate($url)
+  
+  WaitForPage $delayTime
+}</pre>
+<p>Note that I used Write-Verbose commands around in functions to output some useful information in my script, making it easier to spot mistakes while running it.</p>
+<p>Now, as this was made to fill web forms, let's define a function that will fill an input text field with a given value.</p></p>
+<pre lang="PowerShell">Function SetElementValueByName($name, $value, [int] $position = 0) {
+  if ($global:doc -eq $null) {
+    Write-Error "Document is null";
+    break
+  }
+  $elements = @($global:doc.getElementsByName($name))
+  if ($elements.Count -ne 0) {
+    $elements[$position].Value = $value
+  }
+  else {
+    Write-Warning "Couldn't find any element with name ""$name""";
+  }
+}</pre></p>
+<p>This is heavily used in my scripts. An HTML form always has lots of input elements that have unique names that need to be filled. So, if you need to fill the username input text with Philippe value, just call this function:</p>
+<blockquote>
+<p>SetElementValueByName "username" "Philippe"</p>
+</blockquote>
+<p>Note that there is also a option parameter that is used as the element's position in the array returned by <em>$global:doc.getElementByName</em>. By default, the used position is 0 because most of the forms will only have one element with a given name. However, it can be that in (badly designed?) forms, two elements have the same name. In this case, you can specify which one you want to fill.</p>
+<p>Now, I won't explain all the functions, but here are the ones I wrote:</p>
+<pre lang="PowerShell">Function ClickElementByTagName($tagName, [int] $position = 0)
+{
+  if ($global:doc -eq $null) {
+    Write-Error "Document is null"
+    break
+  }
+  $elements = @($global:doc.getElementsByTagName($tagName))
+  if ($elements.Count -ne 0) {
+    $elements[$position].Click()
+    WaitForPage
+  }
+  else {
+    Write-Error "Couldn't find element ""$tagName"" at position ""$position""";
+    break
+  }
+}
+
+Function ClickElementById($id)
+{
+  $element = $global:doc.getElementById($id)
+  if ($element -ne $null) {
+    $element.Click()
+    WaitForPage
+  }
+  else {
+    Write-Error "Couldn't find element with id ""$id"""
+    break
+  }
+}
+
+Function ClickElementByName($name, [int] $position = 0)
+{
+  if ($global:doc -eq $null) {
+    Write-Error "Document is null"
+    break
+  }
+  $elements = @($global:doc.getElementsByName($name))
+  if ($elements.Count -ne 0) {
+    $elements[$position].Click()
+    WaitForPage
+  }
+  else {
+    Write-Error "Couldn't find element with name ""$name"" at position ""$position"""
+    break
+  }
+}</pre>
+<p>These are used to click on objects of the DOM in order to submit the form. These functions are not error proof, but as far as I used this stuff, I didn’t have issues.</p>
+<h3>A Little Example</h3>
+<p>Let’s write something very simple to test these functions. I will do a advanced search on google using these functions:</p>
+<pre lang="PowerShell">NavigateTo "http://www.google.com/advanced_search"
+SetElementValueByName "as_oq" "Unisys Fenix PLDA"
+SetElementValueByName "num" "30"
+SetElementValueByName "lr" "lang_en"
+ClickElementByName "btnG"</pre>
+<p>This gives you a little example of the kind of things you can do. It’s rather simple, but very powerful if you have repetitive tasks to on some web sites.</p>
+<p><a href="http://www.pvle.be/wp-content/uploads/WebUiTesting.ps1">Download the full script here.</a></p>

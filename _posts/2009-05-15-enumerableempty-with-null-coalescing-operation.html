@@ -1,0 +1,35 @@
+---
+layout: post
+title: Enumerable.Empty with null Coalescing Operation
+date: 2009-05-15 20:13:37.000000000 +02:00
+categories: []
+tags:
+- C#
+- LINQ
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>Today I read <a href="http://blogs.msdn.com/ericlippert/archive/2009/05/14/null-is-not-empty.aspx">Eric Lipert's blog latest entry</a>. It is about the semantic difference between <em>null</em> and empty. An easy example is with Collections. An empty Collection is not the same as an non-existing (ie. <em>null</em>) Collection.</p>
+<p>However, as mentioned, how may times did you wish that <em>foreach</em> statement would work on an <em>null</em> Collection? How convenient would it be!</p>
+<p>So far, what I was doing was:</p>
+<pre class="code"><span style="color: blue">foreach </span>(<span style="color: blue">var </span>item <span style="color: blue">in </span>list ?? <span style="color: blue">new </span><span style="color: #2b91af">List</span>&lt;<span style="color: #2b91af">SomeType</span>&gt;())
+{
+    <span style="color: green">//Do Stuff...
+</span>}</pre>
+<p><a href="http://11011.net/software/vspaste"></a>But something nicer exists: Enumerable.Empty. Using that, the code becomes:</p>
+<pre class="code"><span style="color: blue">foreach </span>(<span style="color: blue">var </span>item <span style="color: blue">in </span>list ?? <span style="color: #2b91af">Enumerable</span>.Empty&lt;<span style="color: #2b91af">SomeType</span>&gt;())
+{
+    <span style="color: green">//Do Stuff
+</span>}</pre>
+<p><a href="http://11011.net/software/vspaste"></a>It's actually longer, but it reads easier. The intent is quite obvious, I bet you can show this to someone who doesn't know about the null coalescing operator and he would get what it does! Unfortunately I'm now working on Java and my colleagues would burn me alive if they knew I secretly pledged allegiance to .NET...</p>

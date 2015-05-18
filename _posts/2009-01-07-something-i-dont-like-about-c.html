@@ -1,0 +1,51 @@
+---
+layout: post
+title: Something I don't like about C#
+date: 2009-01-07 13:30:10.000000000 +01:00
+categories: []
+tags:
+- C#
+- Inheritance
+- Java
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>In general, I prefer C# over Java. It's a matter of personal taste, but I find C# more elegant, even if they are very close to each others. But there is something about C# that always bugs me: the way inheritance is declared.</p>
+<p>If we look at this code:</p>
+<pre class="code"><span style="color: blue">public class </span><span style="color: #2b91af">FooBar </span>: <span style="color: #2b91af">Bar</span>, <span style="color: #2b91af">Foo
+</span>{
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a>Apart from Visual Studio's tooltip that helps you, how do you know if <em>Bar</em> is a <strong>interface</strong> or a <strong>class</strong>? It can be both, and there is no way of telling.</p>
+<p>We obliviously know that <em>Foo</em> is an interface, as only one base class can be defined and it has to be right after the &quot;<em>:</em>&quot; character (see the <a href="http://msdn.microsoft.com/en-us/library/aa645617(VS.71).aspx">Class base specification</a> of the C# language).</p>
+<blockquote>
+<p>A class declaration may include a <i>class-base</i> specification, which defines the direct base class of the class and the interfaces implemented by the class.</p>
+<dl>
+<dt><i>class-base:</i></dt>
+<dd>:&#160;&#160; <i>class-type</i> </p>
+<p>:&#160;&#160; <i>interface-type-list</i> </p>
+<p>:&#160;&#160; <i>class-type&#160;&#160; </i>,&#160;&#160; <i>interface-type-list</i> </dd>
+<dt><i>interface-type-list:</i></dt>
+<dd><i>interface-type</i> </p>
+<p><i>interface-type-list&#160;&#160; </i>,&#160;&#160; <i>interface-type</i></dd>
+</dl>
+</blockquote>
+<p>But what about <em>Bar</em>? According to the language specification, it can be either an class or an interface, we cannot know just by looking at it. <a href="http://msdn.microsoft.com/en-us/library/ms229040.aspx">Guidelines for Names that states that interfaces should be prefixed with I</a>, so we could assume that it is a class. However, in this particular example, <em>Foo</em> is an interface for sure but is not prefixed with I, so we cannot assume that <em>Bar</em> is an interface, right?</p>
+<p>Now, if we look at Java's syntax, it is much neater:</p>
+<pre class="code"><span style="color: blue">public class </span><span style="color: teal">FooBar </span><span style="color: blue">extends </span><span style="color: teal">Bar </span><span style="color: blue">implements </span><span style="color: teal">Foo
+</span>{
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>Looking at this, there is no doubt that <em>Bar</em> is a class and <em>Foo</em> is an interface (see Java Language Specification parts on <a href="http://java.sun.com/docs/books/jls/third_edition/html/classes.html#8.1.4">Superclasses</a> and <a href="http://java.sun.com/docs/books/jls/third_edition/html/classes.html#8.1.5">Superinterfaces</a>). Even if the developer gave crappy names, we can sort out what is an interface and what is a class.</p>
+<p>Now, that said, Visual Studio will always tell you if it is a class or an interface. but if you open the source file with something else than a smart IDE? Notepad for example? I think that the language should speak for itself and not rely on naming conventions. With C#, you can have a doubt, while with Java there is none.</p>
+<p>But I still love C# for everything else, I think...</p>

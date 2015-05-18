@@ -1,0 +1,107 @@
+---
+layout: post
+title: Foreach Statement Calls Dispose() on IEnumerator
+date: 2010-05-30 17:06:29.000000000 +02:00
+categories: []
+tags:
+- C#
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>Again, something that might seems natural because you generally don’t see it or even think about it, but interesting to know.</p>
+<p>If the <a href="http://msdn.microsoft.com/en-us/library/system.collections.ienumerator.aspx"><em>IEnumerator</em></a>/<a href="http://msdn.microsoft.com/en-us/library/78dfe2yb.aspx"><em>IEnumerator&lt;T&gt;</em></a> returned by the <a href="http://msdn.microsoft.com/en-us/library/s793z9y2(v=VS.100).aspx"><em>GetEnumerator()</em></a> function of a collection that is foreach-ed implements <em><a href="http://msdn.microsoft.com/en-us/library/system.idisposable.aspx">IDisposable</a></em>, <em><a href="http://msdn.microsoft.com/en-us/library/system.idisposable.dispose(v=VS.100).aspx">Dispose()</a></em> will be called on it when the <a href="http://msdn.microsoft.com/en-us/library/aa664754(VS.71).aspx"><em>foreach</em></a> is over.</p>
+<p>Here is a sample code that does just that:</p>
+<pre class="code"><span style="color: blue">class </span><span style="color: #2b91af">Program
+    </span>{
+        <span style="color: blue">static void </span>Main(<span style="color: blue">string</span>[] args)
+        {
+            <span style="color: blue">foreach </span>(<span style="color: blue">var </span>item <span style="color: blue">in new </span><span style="color: #2b91af">SomeEnumerable</span>())
+            {
+                <span style="color: #2b91af">Console</span>.WriteLine(item);
+            }
+
+            <span style="color: #2b91af">Console</span>.ReadLine();
+        }
+
+        <span style="color: blue">class </span><span style="color: #2b91af">SomeEnumerable </span>: <span style="color: #2b91af">IEnumerable</span>&lt;<span style="color: #2b91af">String</span>&gt;
+        {
+            <span style="color: blue">#region </span>IEnumerable&lt;string&gt; Members
+
+            <span style="color: blue">public </span><span style="color: #2b91af">IEnumerator</span>&lt;<span style="color: #2b91af">String</span>&gt; GetEnumerator()
+            {
+                <span style="color: blue">return new </span><span style="color: #2b91af">CustomEnumerator</span>(<span style="color: blue">new </span><span style="color: #2b91af">List</span>&lt;<span style="color: #2b91af">String</span>&gt;() { <span style="color: #a31515">&quot;One&quot;</span>, <span style="color: #a31515">&quot;Two&quot; </span>}.GetEnumerator());
+            }
+
+            <span style="color: blue">#endregion
+
+            #region </span>IEnumerable Members
+
+            System.Collections.<span style="color: #2b91af">IEnumerator </span>System.Collections.<span style="color: #2b91af">IEnumerable</span>.GetEnumerator()
+            {
+                <span style="color: blue">return </span>GetEnumerator();
+            }
+
+            <span style="color: blue">#endregion
+
+            class </span><span style="color: #2b91af">CustomEnumerator </span>: <span style="color: #2b91af">IEnumerator</span>&lt;<span style="color: #2b91af">String</span>&gt;
+            {
+                <span style="color: #2b91af">IEnumerator</span>&lt;<span style="color: #2b91af">String</span>&gt; enumerator;
+
+                <span style="color: blue">public </span>CustomEnumerator(<span style="color: #2b91af">IEnumerator</span>&lt;<span style="color: #2b91af">String</span>&gt; enumerator)
+                {
+                    <span style="color: blue">this</span>.enumerator = enumerator;
+                }
+
+                <span style="color: blue">#region </span>IEnumerator&lt;string&gt; Members
+
+                <span style="color: blue">public string </span>Current
+                {
+                    <span style="color: blue">get </span>{ <span style="color: blue">return this</span>.enumerator.Current; }
+                }
+
+                <span style="color: blue">#endregion
+
+                #region </span>IDisposable Members
+
+                <span style="color: blue">public void </span>Dispose()
+                {
+                    <span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;SomeEnumerable Enumerator Disposed!&quot;</span>);
+
+                    <span style="color: blue">this</span>.enumerator.Dispose();
+                }
+
+                <span style="color: blue">#endregion
+
+                #region </span>IEnumerator Members
+
+                <span style="color: blue">object </span>System.Collections.<span style="color: #2b91af">IEnumerator</span>.Current
+                {
+                    <span style="color: blue">get </span>{ <span style="color: blue">return this</span>.enumerator.Current; }
+                }
+
+                <span style="color: blue">public bool </span>MoveNext()
+                {
+                    <span style="color: blue">return this</span>.enumerator.MoveNext();
+                }
+
+                <span style="color: blue">public void </span>Reset()
+                {
+                    <span style="color: blue">this</span>.enumerator.Reset();
+                }
+
+                <span style="color: blue">#endregion
+            </span>}
+        }
+    }</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>You can look at the two possible code expansions for the <em>foreach</em> statement on <a href="http://msdn.microsoft.com/en-us/library/aa664754(VS.71).aspx">the MSDN page</a>.</p>

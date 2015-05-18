@@ -1,0 +1,41 @@
+---
+layout: post
+title: Ruby, Day 1
+date: 2011-05-15 12:04:24.000000000 +02:00
+categories: []
+tags:
+- Ruby
+- Seven Languages in Seven Weeks
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>It’s funny because I never learned Ruby, I never wanted to because dynamic languages don’t move me much, but so far it’s been quite fun.</p>
+<p>First, a link to <a href="http://ruby-doc.org/docs/ProgrammingRuby/">http://ruby-doc.org/docs/ProgrammingRuby/</a> that is the main reference to every question on that language.</p>
+<p>I’m not going to run through all the exercises, but I will put solutions of those I found interesting to solve.</p>
+<p>Print “This is sentence number 1” where the number 1 changes from 1 to 10:</p>
+<pre lang="Ruby">(1..10).each { |i| puts "This is sentence number #{i}" }</pre>
+<p>Bonus problem: write a program that picks a random number (I will do between 1 and 1024, how geeky!). Let the player guess a number, telling the player whether the guess is too low or too high:</p>
+<pre lang="Ruby">max = 1024
+
+guess = -1
+number = rand(max) + 1
+
+puts "Guess a number from 1 to #{max}"
+
+until guess == number
+  guess = gets.to_i
+  puts "Number is greater than #{guess}" if number > guess
+  puts "Number is lesser than #{guess}" if number < guess
+end
+
+puts "Well done!"</pre>

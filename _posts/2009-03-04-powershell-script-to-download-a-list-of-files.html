@@ -1,0 +1,65 @@
+---
+layout: post
+title: PowerShell Script to Download a List of Files
+date: 2009-03-04 20:42:17.000000000 +01:00
+categories: []
+tags:
+- PowerShell
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>Lately I have been playing around with PowerShell. I decided that I will write scripts in order to perform some simple actions, actions that could be scripted generally are not due to the fact that writing the script takes longer than manually doing it.</p>
+<p>So here is the first task I would like to automate: sequentially download each file in a list, the list being provided as a text file.</p>
+<h3>Download a file using PowerShell</h3>
+<p>For this part, I simply &quot;stole&quot; the code from somewhere else: <a href="http://community.bartdesmet.net/blogs/bart/archive/2006/11/25/PowerShell-_2D00_-How-to-download-a-file_3F00_.aspx">http://community.bartdesmet.net/blogs/bart/archive/2006/11/25/PowerShell-_2D00_-How-to-download-a-file_3F00_.aspx</a>, plain simple, I don't think I'll be able to do better.</p>
+<h3>Read a text file in an array</h3>
+<p>I was expecting this to be a bit more complicated, but it turns out to be piece of cake:</p>
+<p>
+<pre lang="PowerShell">
+$array = Get-Content TextFile.txt
+</pre></p>
+<p>Not too much trouble.</p>
+<h3>Putting it all together</h3>
+<p>So now we need to do make these things work together. First, read the content of the file (given as parameter) in an array, then for each item in the array get the client to download it.</p>
+<p>Now, there is one little trick here. The WebClient.DownloadFile method's second argument is the local file. In this case, we want it to have the same file name as the source file name. Leveraging the .NET framework, <a href="http://msdn.microsoft.com/en-us/library/system.io.path.aspx">System.IO.Path is</a> the way to go.</p>
+<p>
+<pre lang="PowerShell">
+$list = Get-Content $args
+
+$clnt = New-Object System.Net.WebClient
+
+foreach($url in $list) 
+{ 
+
+	#Get the filename 
+	$filename = [System.IO.Path]::GetFileName($url) 
+
+	#Create the output path 
+	$file = [System.IO.Path]::Combine($pwd.Path, $filename) 
+
+	Write-Host -NoNewline "Getting ""$url""... "
+
+	#Download the file using the WebClient 
+	$clnt.DownloadFile($url, $file) 
+
+	Write-Host "done." 
+}
+</pre></p>
+<p>Two remarks on of the Path class:</p>
+<ul>
+<li>To call static members, we have to use <strong>::</strong> instead of <strong>.</strong>, unlike in C#. </li>
+<li>Surprisingly (and what a nice surprise), Path.GetFileName works on URLs too. So Path.GetFileName(http://www.google.com/hello.txt) returns &quot;hello.txt&quot;. </li>
+</ul>
+<p>The script is not error proof, but it good enough for me now.</p>
+<p><font color="#ff0000">Edit: I added some <em>Host-Write</em> lines in order to display something in the shell. When downloading a long list of files, it is nice to see the progress.</font></p>

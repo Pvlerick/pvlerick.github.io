@@ -1,0 +1,39 @@
+---
+layout: post
+title: Comparing a Value Type with null does not box
+date: 2011-03-22 18:38:57.000000000 +01:00
+categories: []
+tags:
+- Boxing
+- C#
+- Value Types
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>Recently, I discovered something like this my current codebase:</p>
+<pre class="code"><span style="color: blue">var </span>g = <span style="color: #2b91af">Guid</span>.NewGuid();
+
+<span style="color: blue">if </span>(g == <span style="color: blue">null</span>) <span style="color: blue">throw new </span><span style="color: #2b91af">Exception</span>(<span style="color: #a31515">&quot;Exception&quot;</span>);</pre>
+<p>Of course, there are other statements in between, this is just an over simplifications. The idea, however, is to compare a value type with null, which makes no sense if you know .NET a bit, but can be found all over the world I am sure.</p>
+<p>Without checking, I was sure that this would result in boxing the value type, followed by a comparison of the reference of the box with null, which will always return false.</p>
+<p>Well, it turns out that I was wrong. The compiler is smart enough and ignores the statement in this case, as it is useless.</p>
+<p>Now, what if there is an else statement in there?</p>
+<pre class="code"><span style="color: blue">if </span>(g == <span style="color: blue">null</span>) <span style="color: blue">throw new </span><span style="color: #2b91af">Exception</span>(<span style="color: #a31515">&quot;Exception&quot;</span>);
+<span style="color: blue">else </span><span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;boxed?&quot;</span>);</pre>
+<p>In this case, the compiler only emits that is in the else statement. It is once more smart enough.</p>
+<p>Let’s push it a little bit. What happens if we do this:</p>
+<pre class="code"><span style="color: blue">var </span>b = (g == <span style="color: blue">null</span>);
+
+<span style="color: blue">if </span>(b) <span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;boxed?&quot;</span>);</pre>
+<p>In this case, the compiler will emit all the instructions, although it’s obvious that Console.WriteLine will never be executed. But still, no boxing.</p>
+<p>Once more, C#’s compiler is very smart about all this. There is no boxing happening in the three cases.</p>

@@ -1,0 +1,29 @@
+---
+layout: post
+title: Using Statement with an “expression”
+date: 2010-05-24 20:08:28.000000000 +02:00
+categories: []
+tags:
+- C#
+- Using Statement
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>Reading <a href="http://www.amazon.com/exec/obidos/ASIN/0321485890/chaymart02-20">More Effective C#</a> book, I was amazed to find out that the <em>using</em> statement can be used simply with an expression:</p>
+<blockquote><p><em>using-statement:</em>      <br />using ( <em>resource-acquisition</em> ) <em>embedded-statement</em></p>
+<p><em>resource-acquisition:</em>      <br /><em>local-variable-declaration</em>      <br /><em>expression</em></p>
+</blockquote>
+<p>If the <em>resource-acquisition</em> is an <em>expression</em>, the variable resulting from the expression will be <em>inaccessible</em> to the <em>embedded-statement</em>.</p>
+<p>Now, the reason why this is outlined in Bill Wagner’s book is when you write generic classes. Simply put, if <em>expression</em> is something like “a as IDisposable”, if a actually implements <a href="http://msdn.microsoft.com/en-us/library/system.idisposable.aspx"><em>IDisposable</em></a>, it will be disposed after the using statement. If it does not implements <em>IDisposable</em>, nothing will happen.</p>
+<p>The beauty of this is that you don’t have to know, it will work in all cases.</p>
+<p>I didn’t know that, and I find it very neat!</p>

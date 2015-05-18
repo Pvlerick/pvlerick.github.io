@@ -1,0 +1,46 @@
+---
+layout: post
+title: Is a given Field one of SharePoint’s Built-In Field?
+date: 2011-01-30 16:20:28.000000000 +01:00
+categories: []
+tags:
+- C#
+- LINQ
+- SharePoint
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>We struggle with this issue on my current project. The issue itself is rather trivial: we have a field (actually, the Guid of a field) and we want to know if it is one of SharePoint’s built-in field or if it is a custom field from our application.</p>
+<p>Now, as our application runs on MOSS 2007, there are two kind of built-in fields: those of WSS 3.0 and those of MOSS 2007. For WSS 3.0 fields, there is a class named <a href="http://msdn.microsoft.com/en-us/library/microsoft.sharepoint.spbuiltinfieldid.aspx">SPBuiltInFieldId</a> that has all the built-in fields’ guids as public fields and the class even has a static method <a href="http://msdn.microsoft.com/en-us/library/microsoft.sharepoint.spbuiltinfieldid.contains.aspx">Contains</a> that allows to quickly find out if the field is built-in from WSS 3.0 or not.</p>
+<p>For MOSS 2007 fields, there is the <a href="http://msdn.microsoft.com/en-us/library/microsoft.sharepoint.publishing.fieldid.aspx">Microsoft.SharePoint.Publishing.FieldId</a> class that has all the built-in fields’ Guids as public properties, but unfortunately does not have a “Contains” method.</p>
+<p>So how are we going to find out? Obviously, we are not going to compare against all the properties of the FieldId class… No, let’s do this the clean way: make use reflection to build up a <a href="http://msdn.microsoft.com/en-us/library/xfhwa508.aspx">Dictionnary</a> with all the Guids then we’ll use that table to check if our field is in it or not!</p>
+<pre class="code"><span style="color: blue">static </span><span style="color: #2b91af">IDictionary</span>&lt;<span style="color: #2b91af">Guid</span>, <span style="color: blue">bool</span>&gt; PublishingBuildInFields { <span style="color: blue">get</span>; <span style="color: blue">set</span>; }
+
+<span style="color: blue">static </span>Program()
+{
+    <span style="color: #2b91af">Type </span>type = <span style="color: blue">typeof</span>(Microsoft.SharePoint.Publishing.<span style="color: #2b91af">FieldId</span>);
+ 
+    <span style="color: blue">var </span>propsInfoArray = type.GetProperties(<span style="color: #2b91af">BindingFlags</span>.Static | <span style="color: #2b91af">BindingFlags</span>.Public);
+
+    PublishingBuildInFields = propsInfoArray
+        .Select(prop =&gt; (<span style="color: #2b91af">Guid</span>)prop.GetValue(<span style="color: blue">null</span>, <span style="color: blue">null</span>))
+        .ToDictionary(g =&gt; g, g =&gt; <span style="color: blue">true</span>);
+}
+ 
+<span style="color: blue">bool </span>IsSPBuiltInField(<span style="color: #2b91af">SPField </span>field)
+{
+    <span style="color: blue">return </span><span style="color: #2b91af">SPBuiltInFieldId</span>.Contains(field.Id)
+        || PublishingBuildInFields.ContainsKey(field.Id);
+}</pre>
+<p>Now, one interesting detail is that ToDictionary uses immediate execution, so we are sure to execute reflection calls only once, during the static constructor’s execution. This is important, because if we just built a sequence with Select, every time we could access that sequence the reflection code would execute, which is not a good idea in most cases.</p>
+<p><font color="#ff0000">Update</font>: follow up <a href="http://www.pvle.be/2011/02/more-on-isspbuiltinfield/">here</a>.</p>

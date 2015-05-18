@@ -1,0 +1,91 @@
+---
+layout: post
+title: Calling One Way WCF Service with BizTalk WCF Adapter, Part 2
+date: 2008-12-30 18:36:37.000000000 +01:00
+categories: []
+tags:
+- BizTalk
+- BizTalk 2006 R2
+- OneWay
+- WCF
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>As promised, here is the follow up of my previous post: <a href="http://www.pvle.be/2008/12/calling-one-way-wcf-service-with-biztalk-wcf-adapter-part-1/">Calling One Way WCF Service with BizTalk WCF Adapter, Part 1</a>.</p>
+<p>Let's do a qui recap: we want to create a WCF proxy that will call a one way web service and return an empty message to BizTalk so the messaging process doesn't timeout waiting for an answer.</p>
+<h3>The Interface</h3>
+<p>The first step is to create a service interface that is able to receive any message. This is done by</p>
+<pre class="code">[<span style="color: #2b91af">ServiceContract</span>(Namespace = <span style="color: #a31515">&quot;http://pvle.be/WcfOneWayProxy&quot;</span>, Name = <span style="color: #a31515">&quot;OneWayProxy&quot;</span>)]
+<span style="color: blue">public interface </span><span style="color: #2b91af">IOneWayProxy
+</span>{
+    [<span style="color: #2b91af">OperationContract</span>(Action = <span style="color: #a31515">&quot;*&quot;</span>, ReplyAction = <span style="color: #a31515">&quot;*&quot;</span>)]
+    <span style="color: #2b91af">Message </span>ProcessOneWayMessage(<span style="color: #2b91af">Message </span>message);
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a>The operation has to be defined as a request/reply operation, as this is what BizTalk expects. Note the Action property of the <a href="http://msdn.microsoft.com/en-us/library/system.servicemodel.operationcontractattribute.aspx">OperationContractAttribute</a>, its value is set to &quot;*&quot; meaning that all received messages will be dispatched to that operation.</p>
+<h3>The Implementation</h3>
+<p>Now that the interface is ready, let's implement it.</p>
+<pre class="code">[<span style="color: #2b91af">ServiceBehavior</span>(InstanceContextMode = <span style="color: #2b91af">InstanceContextMode</span>.PerCall, ValidateMustUnderstand = <span style="color: blue">false</span>)]
+<span style="color: blue">public class </span><span style="color: #2b91af">OneWayProxy </span>: <span style="color: #2b91af">IOneWayProxy
+</span>{
+    <span style="color: blue">private const </span><span style="color: #2b91af">String </span>ConfigurationName = <span style="color: #a31515">&quot;ServiceEndpoint&quot;</span>;
+    <span style="color: blue">private static </span><span style="color: #2b91af">ChannelFactory</span>&lt;<span style="color: #2b91af">IOutputChannel</span>&gt; Factory;
+
+    <span style="color: blue">static </span>OneWayProxy()
+    {
+        <span style="color: #2b91af">BasicHttpBinding </span>binding = <span style="color: blue">new </span><span style="color: #2b91af">BasicHttpBinding</span>();
+        <span style="color: #2b91af">OneWayProxy</span>.Factory = <span style="color: blue">new </span><span style="color: #2b91af">ChannelFactory</span>&lt;<span style="color: #2b91af">IOutputChannel</span>&gt;(<span style="color: #2b91af">OneWayProxy</span>.ConfigurationName);
+        <span style="color: #2b91af">OneWayProxy</span>.Factory.Open();
+    }
+
+    <span style="color: blue">#region </span>IOneWayProxy Members
+
+    <span style="color: blue">public </span><span style="color: #2b91af">Message </span>ProcessOneWayMessage(<span style="color: #2b91af">Message </span>message)
+    {
+        <span style="color: #2b91af">IOutputChannel </span>channel = <span style="color: #2b91af">OneWayProxy</span>.Factory.CreateChannel();
+
+        <span style="color: blue">try
+        </span>{
+            <span style="color: green">//Send the one way message
+            </span>channel.Open();
+            channel.Send(message);
+            channel.Close();
+        }
+        <span style="color: blue">catch </span>(<span style="color: #2b91af">Exception</span>)
+        {
+            <span style="color: green">//Do something, log the exception, whatever
+
+            </span><span style="color: blue">return </span><span style="color: #2b91af">Message</span>.CreateMessage(message.Version, <span style="color: #a31515">&quot;http://pvle.be/EmptyReplyAction&quot;</span>);
+        }
+
+        <span style="color: green">//Whatever happens, send a response as this was &quot;Fire and Forget&quot; for the caller
+        //Empty response send back to BizTalk so messaging process can terminate gracefully
+        </span><span style="color: blue">return </span><span style="color: #2b91af">Message</span>.CreateMessage(message.Version, <span style="color: #a31515">&quot;http://pvle.be/EmptyReplyAction&quot;</span>);
+    }
+
+    <span style="color: blue">#endregion
+</span>}</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>A couple of remarks here:</p>
+<ul>
+<li>You need to have a valid client endpoint configuration in you App.config/Web.config that has the name defined in the <em>ConfigurationName</em> const.</li>
+<li>To create the message that is to be returned, we use the received message's Version property, ensuring that there is no version mismatch.</li>
+</ul>
+<p>Now that we have our service implementation, we can host it. I hosted it in IIS, as this is probably the best way to host WCF services and as this proxy should be running all the time. </p>
+<h3>BizTalk WCF Adapter Configuration</h3>
+<p>The last step is to make sure that your one way WCF adapter is calling the proxy. This is done by changing the address in the WCF Adapter configuration in your BizTalk project.</p>
+<p><a href="http://www.pvle.be/wp-content/2008/12/biztalkwcfadapterconfiguration1.png"><img style="border-top-width: 0px; border-left-width: 0px; border-bottom-width: 0px; border-right-width: 0px" height="584" alt="BizTalkWcfAdapterConfiguration" src="assets/biztalkwcfadapterconfiguration-thumb.png" width="424" border="0" /></a> </p>
+<p>Once this is set (the SOAP Action header remains the same), you are ready to run you orchestration. You will see that the messaging process will no longer timeout, as our home made proxy will send an empty response message.</p>
+<h3>Improvements</h3>
+<p>Let's face it, this implementation is fine for a proof of concept, but it's hardly enough for a real application as only one endpoint is defined in the configuration.</p>
+<p>If you have multiple one way endpoints and you want to reuse that proxy, you'll probably need to have some lookup table in the proxy code to define the destination of the call, based on the <em>To</em> property of the Message object. This way, you can use a single one way proxy for all the actions needed in your orchestrations, as long as you are not using the same action for more than one endpoint. </p>

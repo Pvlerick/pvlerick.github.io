@@ -1,0 +1,90 @@
+---
+layout: post
+title: Ruby, Day 3
+date: 2011-05-17 17:02:00.000000000 +02:00
+categories: []
+tags:
+- Ruby
+- Seven Languages in Seven Weeks
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>Last day on Ruby!</p>
+<p>Retrospectively, I didn’t knew Ruby before (and I still don’t know much about it, admittedly), but it’s been fun.</p>
+<p>I’m not a big fan after what I saw. I still find it a bit messy, but that’s maybe because I’m not used to it enough. The “you can rewrite anything and change basic behavior” is very nice, but I seriously wonder how many times it has bitten back developers. If someone rewrites one of the basic methods in a big codebase, I can only imagine the consequences, if you are luck enough to see them right away…</p>
+<p>However, I enjoyed scripting with Ruby very much, and it was a good brainteaser to try to find the effective way of doing those things in a language I completely ignored so far.</p>
+<p>Anyway, here is my last homework!</p>
+<h2>Do</h2>
+<p>So, the goal here is to modify a class that reads CSV files and add an <em>each</em> method that will perform a block on a CsvRow object, object that is to be written. This object should have its method_missing overwritten so that you can access columns as if they were methods:</p>
+<pre lang="Ruby">
+module ActsAsCsv
+  
+  def self.included(base)
+    base.extend ClassMethods
+  end
+  
+  module ClassMethods
+    def acts_as_csv
+      include InstanceMethods
+    end
+  end
+  
+  module InstanceMethods
+    
+    def read
+      @csv_contents = []
+      filename = self.class.to_s.downcase + '.csv'
+      file = File.new(filename)
+      @headers = file.gets.chomp.split(', ')
+
+      file.each do |row|
+        @csv_contents << row.chomp.split(', ')
+      end
+    end
+    
+    attr_accessor :headers, :csv_contents
+    
+    def initialize
+      read 
+    end
+    
+    def each(&block)
+      @csv_contents.each { |line| block.call CsvRow.new(@headers, line) }
+    end
+
+  end
+
+end
+
+class RubyCsv  # no inheritance! You can mix it in
+  include ActsAsCsv
+  acts_as_csv
+end
+
+class CsvRow
+  attr_accessor :headings, :values
+  
+  def initialize(headings, values)
+    @headings = headings
+    @values = Hash[headings.zip(values).map { |e| [e[0], e[1]] }]
+  end
+  
+  def method_missing(name, *args)
+    col = name.to_s
+    @values[col]
+  end
+end
+
+csv = RubyCsv.new
+csv.each { |row| puts row.two }
+</pre>

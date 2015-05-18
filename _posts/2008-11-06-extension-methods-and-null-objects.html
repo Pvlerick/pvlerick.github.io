@@ -1,0 +1,58 @@
+---
+layout: post
+title: Extension Methods and null Objects
+date: 2008-11-06 20:37:29.000000000 +01:00
+categories: []
+tags:
+- .NET
+- C# 3.0
+- Extension Methods
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>C# 3.0 allows adding new methods to existing types. These are called <a href="http://msdn.microsoft.com/en-us/library/bb383977.aspx">Extension Methods</a>. This allow programmers to add methods to existing types, even if they are not partial or event sealed.</p>
+<p>These special methods have to be declared in a special way:</p>
+<ol>
+<li>They must be declared within a <em>static class</em></li>
+<li>They must be <em>static</em></li>
+<li>The first parameter of the method has to be the type that is &quot;extended&quot;, preceded by the <em>this</em> keyword</li>
+</ol>
+<p>So, for example, let's copy the very useful <a href="http://msdn.microsoft.com/en-us/library/system.string.isnullorempty.aspx"><em>IsNullOrEmpty</em></a> method as an extension method.</p>
+<pre class="code"><span style="color: blue">public static class </span><span style="color: #2b91af">Extensions
+</span>{
+    <span style="color: blue">public static bool </span>IsNullOrEmpty(<span style="color: blue">this </span><span style="color: #2b91af">String </span>s)
+    {
+        <span style="color: blue">return </span><span style="color: #2b91af">String</span>.IsNullOrEmpty(s);
+    }
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a>Simple. Calling this</p>
+<pre class="code"><span style="color: #2b91af">String </span>s = <span style="color: #a31515">&quot;&quot;</span>;
+s.IsNullOrEmpty();</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>returns true. You can even do</p>
+<pre class="code"><span style="color: #a31515">&quot;&quot;</span>.IsNullOrEmpty();</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>which returns true as well.</p>
+<p>Now, all of this is actually an illusion. When the compilers finds</p>
+<pre class="code"><span style="color: #a31515">&quot;&quot;</span>.IsNullOrEmpty();</pre>
+<p><a href="http://11011.net/software/vspaste"></a>he will translates it in </p>
+<pre class="code"><span style="color: #2b91af">Extensions</span>.IsNullOrEmpty(<span style="color: #a31515">&quot;&quot;</span>);</pre>
+<p><a href="http://11011.net/software/vspaste"></a>So, when an extension method is used, there is one more parameter, that is of the type the extension method is defined on. In this case, <em>String</em>.</p>
+<p>But, if it as parameter, it can be null, right? Yes!</p>
+<pre class="code"><span style="color: #2b91af">String </span>s = <span style="color: blue">null</span>;
+s.IsNullOrEmpty();</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>or even</p>
+<pre class="code">((<span style="color: #2b91af">String</span>) <span style="color: blue">null</span>).IsNullOrEmpty()</pre>
+<p><a href="http://11011.net/software/vspaste"></a>will both work, without trowing a <a href="http://msdn.microsoft.com/en-us/library/system.nullreferenceexception(VS.80).aspx">NullReferenceException</a>.</p>
+<p>Nothing revolutionary here, but I found funny to &quot;call&quot; method on a <em>null</em> object and not have an exception raised.</p>

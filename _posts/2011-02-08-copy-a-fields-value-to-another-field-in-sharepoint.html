@@ -1,0 +1,59 @@
+---
+layout: post
+title: Copy a Field’s Value to another Field in SharePoint
+date: 2011-02-08 18:04:02.000000000 +01:00
+categories: []
+tags:
+- C#
+- LINQ
+- SharePoint
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>If one of your field data type needs to be changed, you will run into issues when deploying the new version of your application, as SharePoint can’t translate from one data type to another. For example, if you change a field type from “Single Line of Text” to “Notes” in Fields.xml, everything will go wrong.</p>
+<p>The clean way to do this is to create a new field, the one that will be used from now on, and copy the value of the old field to the new field, while applying a transformation if necessary.</p>
+<p>For this, we wrote a generic method that will go trough the entire site and perform the changes on the specified fields.</p>
+<pre class="code"><span style="color: blue">public static void </span>CopyFieldValues(<span style="color: #2b91af">SPSite </span>site,
+    <span style="color: #2b91af">String </span>copyFromFieldInternalName,
+    <span style="color: #2b91af">String </span>copyToFieldInternalName,
+    <span style="color: #2b91af">Func</span>&lt;<span style="color: #2b91af">Object</span>, <span style="color: #2b91af">Object</span>&gt; transformation)
+{
+    <span style="color: blue">foreach </span>(<span style="color: #2b91af">SPWeb </span>web <span style="color: blue">in </span>site.AllWebs)
+    {
+        <span style="color: green">//Get all the ListItems in every list of the web that has the 2 fields
+        </span><span style="color: blue">var </span>items = (<span style="color: blue">from </span>l <span style="color: blue">in </span>web.Lists.Cast&lt;<span style="color: #2b91af">SPList</span>&gt;()
+                     <span style="color: blue">where </span>l.Fields.ContainsField(copyFromFieldInternalName)
+                         &amp;&amp; l.Fields.ContainsField(copyToFieldInternalName)
+                     <span style="color: blue">from </span>i <span style="color: blue">in </span>l.Items.Cast&lt;<span style="color: #2b91af">SPListItem</span>&gt;()
+                     <span style="color: blue">select </span>i).ToList();
+
+        <span style="color: green">//For each listitem in this web, migrate the content of the old one to the new one
+        //To do this, we use the tranformation Func that was given as a parameter
+        </span><span style="color: blue">foreach </span>(<span style="color: #2b91af">SPListItem </span>item <span style="color: blue">in </span>items)
+        {
+            item[copyToFieldInternalName] = transformation(item[copyFromFieldInternalName]);
+
+            <span style="color: green">//Do system update to avoid modifying the item's version
+            </span>item.SystemUpdate(<span style="color: blue">false</span>);
+        }
+    }
+}</pre>
+<p>So, now that we have a generic method to copy the content of a field into another, we can “specialize” it for various uses.</p>
+<p>One example is migrating a Single Line of Text type field to a Note type field. It is very easy because there is no transformation needed:</p>
+<pre class="code"><span style="color: blue">public static void </span>CopyFieldValuesFromSingleLineOfTextToNote(<span style="color: #2b91af">SPSite </span>site,
+    <span style="color: #2b91af">String </span>copyFromFieldInternalName,
+    <span style="color: #2b91af">String </span>copyToFieldInternalName)
+{
+    <span style="color: green">//No need to transform the data in this case
+    </span><span style="color: #2b91af">SharePointFieldsHelper</span>.CopyFieldValues(site, copyFromFieldInternalName, copyToFieldInternalName, oldFieldValue =&gt; oldFieldValue);
+}</pre>

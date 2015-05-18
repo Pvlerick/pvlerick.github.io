@@ -1,0 +1,85 @@
+---
+layout: post
+title: Recursive Fibonacci with F#
+date: 2009-07-02 19:12:59.000000000 +02:00
+categories: []
+tags:
+- F#
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p><a href="http://en.wikipedia.org/wiki/Fibonacci_number">Fibonacci number</a> is the typical example of recursive usage. However, as pointed in <a href="http://www.amazon.com/Code-Complete-Practical-Handbook-Construction/dp/0735619670/ref=sr_1_1?ie=UTF8&amp;s=books&amp;qid=1246536070&amp;sr=8-1">Code Complete</a>, when programmed as purely recursive, it is very painful.</p>
+<p>Remark: this post is very straightforward, but what I'm really doing here is playing around with F# to learn.</p>
+<p>In case you don't know Fibonacci number, please see this article, but it can be summarized as:</p>
+<ul>
+<li>F(n) = F(n-1) + F(n-2)</li>
+<li>F(1) = 1</li>
+<li>F(2) = 1</li>
+</ul>
+<p>Here is the F# sample of a recursive Fibonacci function:</p>
+<pre class="code"><span style="color: blue">let rec </span>fib n =
+    <span style="color: blue">match </span>n <span style="color: blue">with
+    </span>| 1 | 2 <span style="color: blue">-&gt; </span>1
+    | n <span style="color: blue">-&gt; </span>fib(n-1) + fib(n-2)</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>Plain simple. However, you can easily spot that we are calculating things over and over again.</p>
+<p>To see how painful it gets when the number get large, let's benchmark this using the <a href="http://msdn.microsoft.com/en-us/library/system.diagnostics.stopwatch.aspx">Stopwatch</a>:</p>
+<pre class="code"><span style="color: blue">let </span>n = 40
+<span style="color: blue">let </span>sw = Stopwatch()
+
+sw.Start()
+<span style="color: blue">let </span>x = fib(n)
+sw.Stop()
+
+Console.WriteLine(<span style="color: maroon">"fibRec({0}): {1}"</span>, n, x)
+Console.WriteLine(<span style="color: maroon">"Time: {0}"</span>, sw.ElapsedMilliseconds)</pre>
+<p><a href="http://11011.net/software/vspaste"></a>On my current laptop, using n as 40, it takes 2858ms. For n = 41, it takes 4698ms. For n = 42, it takes 7504ms (the time it takes for n = 40 plus n = 41, as we are calculating over and over), etc. If I launch it with n = 50, It should take about six minutes. For n = 60, it will take 12 hours.for n = 70, it'll take more than 62 days...</p>
+<p>Not very effective indeed.</p>
+<p>So, the best way for this to be faster is to find a way to not calculate thing again and again. You can do this using a while or for statement, but I want to do this recursively. It has previously been done by <a href="http://community.bartdesmet.net/blogs/bart/archive/2008/10/21/memoization-for-dummies.aspx">Bart De Smet in C# using memoization</a> (which is much better than what I came up with...), but I'll do this with an array.</p>
+<p>Here's the plan:</p>
+<ul>
+<li>Use an array to store previously calculated values;</li>
+<li>Each value in the array will be initialized as 0;</li>
+<li>When trying to fetch a value in the array, if it is 0, let's calculate the value by calling the function again.</li>
+</ul>
+<p>Here is the way I did this in F#:</p>
+<pre class="code"><span style="color: blue">let </span>fib n =
+    <span style="color: blue">let </span>lookup = Array.create (n+1) 0
+    <span style="color: blue">let rec </span>f = <span style="color: blue">fun </span>x <span style="color: blue">-&gt;
+        match </span>x <span style="color: blue">with
+        </span>| 1 | 2 <span style="color: blue">-&gt; </span>1
+        | x <span style="color: blue">-&gt;
+            match </span>lookup.[x] <span style="color: blue">with
+            </span>| 0 <span style="color: blue">-&gt;
+                </span>lookup.[x] &lt;- f(x-1) + f(x-2)
+                lookup.[x]
+            | x <span style="color: blue">-&gt; </span>x
+    f(n)</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>Remarks:</p>
+<ul>
+<li>The "wrapper" function <strong>fib</strong> is not recursive, as we don't call it over and over again;</li>
+<li>The array's size is n+1, so we can call on it using x and not having to do x-1 all the time. One value is wasted, but off-by-one errors are avoided;</li>
+<li>The <em>lambda</em> function <strong>f</strong> is recursive as we have to call it over and over again.</li>
+<li>The array is captured and used in the <em>lambda</em> function <strong>f</strong> (closure).</li>
+</ul>
+<p>Now let's run the benchmark once more and see the result.</p>
+<p>For n = 42, the time is... 1ms. For n = 80 (that would take 21 years recursively, although it would probably overflow), the time is 1ms also. A bit more difficult to read, but not too bad regarding performances.</p>
+<h3>What Did I Learn?</h3>
+<p>For the record, here's what I learned from doing this:</p>
+<ul>
+<li><strong>rec</strong> keyword simply means that the function is able to call itself. If omitted, the function is not visible inside it's own body;</li>
+<li><strong>match</strong> statements can have logical expressions on one line to mach multiple values (in the example above, 1 and 2 have to return 1);</li>
+<li>to get an element of an array, you use the <strong>array.[x]</strong> and not the usual <strong>array[x]</strong>.</li>
+</ul>
+<p>There is probably a good explanation for each of these points, but I don't have it yet. I'm sure It'll make sense once I get to know the language a bit better.</p>

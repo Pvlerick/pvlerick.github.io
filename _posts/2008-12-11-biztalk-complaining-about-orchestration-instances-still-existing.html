@@ -1,0 +1,35 @@
+---
+layout: post
+title: BizTalk complaining about Orchestration instances still existing
+date: 2008-12-11 20:27:41.000000000 +01:00
+categories: []
+tags:
+- BizTalk 2006 R2
+- Orchestration
+- SQL Server 2005
+- Visual Studio 2005
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>As I was studying BizTalk 2006 R2, I came across a strange error. This error was reported by Visual Studio 2005 when trying to redeploy.</p>
+<blockquote><p>Could not change the bindings for orchestration 'xxx', Version=1.0.0.0,Culture=neutral, PublicKeyToken=c380e04620d206e8' as one or more instances of the orchestration still exist.</p>
+</blockquote>
+<p>Trying to act on the orchestration itself or even the solution in BizTalk Administration Tool was giving the same error.</p>
+<p>The fix was found in this blog post: <a href="http://biztalkia.blogspot.com/2006/02/one-or-more-instances-of-orchestration.html">One or more instances of the orchestration still exist</a>.</p>
+<p>So, there are two solutions to fix this issue:</p>
+<ul>
+<li>Terminate instances manually using the BizTalk Administration Tool, which didn't work for me. </li>
+<li>Use a stored procedure to clear BizTalk's message box of all messages. This one didn't work either. </li>
+</ul>
+<p>As pointed out in <a href="http://biztalkia.blogspot.com/2006/02/one-or-more-instances-of-orchestration.html?showComment=1205945280000#c659374986487463391">one of the comments</a> of the abode post, the <em>bts_CleanupMsgbox</em> comes empty at BizTalk install. This means that it executes when you call it, but nothing happens. The orchestrations were still in the list of running orchestrations in BizTalk Administration Tool.</p>
+<p>However, the script to create the working procedure is located in the &quot;C:\Program Files\Microsoft BizTalk Server 2006\Schema\msgbox_cleanup_logic.sql&quot; file. Once this has been executed, the stored procedure will correctly clean BizTalk's messages database.</p>

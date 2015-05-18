@@ -1,0 +1,51 @@
+---
+layout: post
+title: Get-Content and –encoding Switch
+date: 2009-05-29 19:32:26.000000000 +02:00
+categories: []
+tags:
+- Encoding
+- Get-Content
+- PowerShell
+- XML
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>Today I ran into a funny issue. I was playing around with PowerShell in order to automate some repetitive task I have to do at work (it is Web UI automation, I’ll post on that later), and when reading XML file using Get-Content I had encoding issues. When the XML contained a ü character, it was replaced in the output file by some junk that immediately tells you that there is something wrong with encoding somewhere.</p>
+<p>Let’s see this with a little example.</p>
+<p>Here is a sample XML file:</p>
+<pre class="code"><span style="color: blue">&lt;</span><span style="color: #a31515">Test</span><span style="color: blue">&gt;
+ &lt;</span><span style="color: #a31515">EvilStringOfDeath</span><span style="color: blue">&gt;&lt;![CDATA[
+  </span><span style="color: gray">a'b&lt;'&gt;&quot;,!&quot;/%$?$&amp;?%*(()%/&quot;!&quot;/&amp;?%$/&quot;*&amp;$/&quot;?%&amp;?-f¯Ñ112üêù
+ </span><span style="color: blue">]]&gt;&lt;/</span><span style="color: #a31515">EvilStringOfDeath</span><span style="color: blue">&gt;
+&lt;/</span><span style="color: #a31515">Test</span><span style="color: blue">&gt;</span></pre>
+<p>Ok, the content is ugly, but you get the point. Let’s read this in PowerShell and see what happens</p>
+<p>
+<pre lang="DOS">$xmlData = [xml] (gc .\Input.xml)</pre></p>
+<p>And now, let’s see the content of that variable</p>
+<p>
+<pre lang="DOS">$xmlData.Test.EvilStringOfDeath.get_innertext()</pre></p>
+<blockquote>
+<p>a'b&lt;'&gt;&quot;,!&quot;/%$?$&amp;?%*(()%/&quot;!&quot;/&amp;?%$/&quot;*&amp;$/&quot;?%&amp;?-fÂ¯Ã'112Ã¼ÃªÃ¹</p>
+</blockquote>
+<p>Something was lost in translation. You might think that it’s only a display issue, as help on Get-Content says that the <em>–encoding</em> switch but it is not. If you write the content of the $xmlData variable using .Save() or simply by out-putting it to a file (using &gt; operator), the content of the file will not be valid.</p>
+<p>To make this work, there is a switch in Get-Content: <em>-encoding</em>. You can specify which encoding format. So, using this command:</p>
+<p>
+<pre lang="DOS">$xmlData = [xml] (gc .\Input.xml -enc UTF8)</pre></p>
+<p>The data should be read properly. Now if I display the content of $xmlData once more, here is what I get:</p>
+<blockquote>
+<p>a'b&lt;'&gt;&quot;,!&quot;/%$?$&amp;?%*(()%/&quot;!&quot;/&amp;?%$/&quot;*&amp;$/&quot;?%&amp;?-f¯Ñ112üêù</p>
+</blockquote>
+<p>Perfect, I got what I want. I can now save or output it properly!</p>
+<p>PS: if you go a <em>gm</em> (Get-Member) on <em>$xmlData.Test.EvilStringOfDeath</em> you won’t see the <em>get_innertext()</em> member. I don’t know why, but still, it works. I found it over <a href="http://www.johnblackman.com/2008/05/14/PowershellCDATAXMLGET.aspx">here</a>.</p>
+<p>PS2: I had that issues at work, when I’m running a XP laptop. Now that I’m home on my Windows 7 RC box, the –encoding switch of Get-Content doesn’t even show in the help… There sure is a good explanation, but I don’t have it.</p>

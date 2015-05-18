@@ -1,0 +1,73 @@
+---
+layout: post
+title: SharePoint, SPWeb Objects and Dispose()
+date: 2010-07-16 11:10:00.000000000 +02:00
+categories: []
+tags:
+- Dispose
+- SharePoint
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>If you worked a bit with SharePoint, you surely know how important it is to dispose of SPSite objects, SPWeb objects and such.</p>
+<p>However, these objects are sometimes retrieved by using another object’s property. A very common one is SPContext.Current that has properties to return the current SPSite and SPWeb.</p>
+<p>Needless to say, calling dispose on an object that you got via another object’s property seems utterly rude. I mean, you are basically disposing something that was “borrowed” from another object. When I see code doing this, I get very suspicious.</p>
+<p>Here is a common example:</p>
+<pre class="code"><span style="color: blue">using </span>(<span style="color: #2b91af">SPWeb </span>web = <span style="color: #2b91af">SPContext</span>.Current.Web)
+{
+    <span style="color: green">//Do something with web
+</span>}</pre>
+<p>Using reflector, here is what SPContext.Web does:</p>
+<pre class="code">public <a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://Microsoft.SharePoint:12.0.0.0:71e9bce111e9429c/Microsoft.SharePoint.SPWeb">SPWeb</a> <b><a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://Microsoft.SharePoint:12.0.0.0:71e9bce111e9429c/Microsoft.SharePoint.SPContext/property:Web:Microsoft.SharePoint.SPWeb">Web</a></b>
+{
+    get
+    {
+        if (this.<a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://Microsoft.SharePoint:12.0.0.0:71e9bce111e9429c/Microsoft.SharePoint.SPContext/m_web:Microsoft.SharePoint.SPWeb">m_web</a> == null)
+        {
+            this.<a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://Microsoft.SharePoint:12.0.0.0:71e9bce111e9429c/Microsoft.SharePoint.SPContext/m_web:Microsoft.SharePoint.SPWeb">m_web</a> = <a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://Microsoft.SharePoint:12.0.0.0:71e9bce111e9429c/Microsoft.SharePoint.WebControls.SPControl">SPControl</a>.<a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://Microsoft.SharePoint:12.0.0.0:71e9bce111e9429c/Microsoft.SharePoint.WebControls.SPControl/GetContextWeb(System.Web.HttpContext):Microsoft.SharePoint.SPWeb">GetContextWeb</a>(this.<a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://Microsoft.SharePoint:12.0.0.0:71e9bce111e9429c/Microsoft.SharePoint.SPContext/m_context:System.Web.HttpContext">m_context</a>);
+        }
+        return this.<a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://Microsoft.SharePoint:12.0.0.0:71e9bce111e9429c/Microsoft.SharePoint.SPContext/m_web:Microsoft.SharePoint.SPWeb">m_web</a>;
+    }
+}</pre>
+<p>As we can see, this returns a private field of type SPWeb. Calling Dispose() on that (via the <em>using</em> statement) is clearly not very nice to our beloved SPContext. This kind of coding is known to bring unexpected errors. In fact, FxCop will raise a warning if it is set to check for SharePoint Best Practices Rules.</p>
+<p>If this is a general rule, there are of course exceptions, I believe due to some inconsistencies in the API. Here is one of them:</p>
+<pre class="code"><span style="color: #2b91af">SPWeb </span>web = <span style="color: #2b91af">SPContext</span>.Current.Web;
+
+<span style="color: blue">foreach </span>(<span style="color: #2b91af">SPWeb </span>subWeb <span style="color: blue">in </span>web.Webs)
+{
+    <span style="color: green">//Do something with subWeb
+
+    </span>subWeb.Dispose();
+}</pre>
+<p>In this particular case, we iterate over a collection of SPWeb objects trough the SPWeb.Webs property. As said before, at first sight, this looks bad. </p>
+<p>Again, using reflector, this is what the Webs property does:</p>
+<pre class="code">public <a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://Microsoft.SharePoint:12.0.0.0:71e9bce111e9429c/Microsoft.SharePoint.SPWebCollection">SPWebCollection</a> <b><a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://Microsoft.SharePoint:12.0.0.0:71e9bce111e9429c/Microsoft.SharePoint.SPWeb/property:Webs:Microsoft.SharePoint.SPWebCollection">Webs</a></b>
+{
+    get
+    {
+        if (this.<a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://Microsoft.SharePoint:12.0.0.0:71e9bce111e9429c/Microsoft.SharePoint.SPWeb/m_Webs:Microsoft.SharePoint.SPWebCollection">m_Webs</a> == null)
+        {
+            this.<a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://Microsoft.SharePoint:12.0.0.0:71e9bce111e9429c/Microsoft.SharePoint.SPWeb/m_Webs:Microsoft.SharePoint.SPWebCollection">m_Webs</a> = new <a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://Microsoft.SharePoint:12.0.0.0:71e9bce111e9429c/Microsoft.SharePoint.SPWebCollection/.ctor(Microsoft.SharePoint.SPWebCollection.ISPWebCollectionProvider,System.Guid)">SPWebCollection</a>(new <a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://Microsoft.SharePoint:12.0.0.0:71e9bce111e9429c/Microsoft.SharePoint.SPWeb.SPWebCollectionProvider/.ctor(Microsoft.SharePoint.SPWeb)">SPWebCollectionProvider</a>(this), this.<a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://Microsoft.SharePoint:12.0.0.0:71e9bce111e9429c/Microsoft.SharePoint.SPWeb/m_guidId:System.Guid">m_guidId</a>);
+        }
+        return this.<a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://Microsoft.SharePoint:12.0.0.0:71e9bce111e9429c/Microsoft.SharePoint.SPWeb/m_Webs:Microsoft.SharePoint.SPWebCollection">m_Webs</a>;
+    }
+}</pre>
+<p>It is very similar to the previous code, so it feels very unnatural to call Dispose() on all object that are held in that collection.</p>
+<p>However, this is the way to go, otherwise FxCop will raise a warning saying that SPWeb objects were not disposed of. In my opinion, this shouldn’t be a property, but a method called GetWebs() or something similar, as explained in <a href="http://msdn.microsoft.com/en-us/library/ms229054.aspx">Framework Design Guidelines</a>.</p>
+<p>Related links:</p>
+<ul>
+<li><a href="http://stackoverflow.com/questions/1237862/spweb-site-should-you-call-dispose-on-it">http://stackoverflow.com/questions/1237862/spweb-site-should-you-call-dispose-on-it</a> </li>
+<li><a href="http://www.sharepointdevwiki.com/display/public/When+to+Dispose+SharePoint+objects">http://www.sharepointdevwiki.com/display/public/When+to+Dispose+SharePoint+objects</a> </li>
+<li><a href="http://msdn.microsoft.com/en-us/library/aa973248.aspx">http://msdn.microsoft.com/en-us/library/aa973248.aspx</a> </li>
+<li><a href="http://blogs.msdn.com/b/rogerla/archive/2008/02/12/sharepoint-2007-and-wss-3-0-dispose-patterns-by-example.aspx">http://blogs.msdn.com/b/rogerla/archive/2008/02/12/sharepoint-2007-and-wss-3-0-dispose-patterns-by-example.aspx</a> </li>
+</ul>

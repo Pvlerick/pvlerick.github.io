@@ -1,0 +1,137 @@
+---
+layout: post
+title: Accessible Forms using Javascript and AJAX
+date: 2008-02-10 16:32:42.000000000 +01:00
+categories: []
+tags:
+- AJAX
+- HTML
+- Javascript
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: pvlerick
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>Nearly a year ago, I rebuilt a business website. On this website, there is a &#8220;Contest&#8221; page that offers each month a gift to the randomly selected winner.</p>
+<p>However, this contest is supposed to be available only for Belgian.</p>
+<h2>First Solution</h2>
+<p>A few years ago, when I first built the website and that we encountered this problem (having French, German and event Lebanese people taking the contest), we thought of a simple solution: when someone fills in his <em>post code</em> in the participation form, a simple JavaScript code (using <a href="http://en.wikipedia.org/wiki/AJAX">AJAX</a>) would then populate a <a href="http://en.wikipedia.org/wiki/Combobox">Combo box</a> with all the cities that matched the given 4 digit Belgian post code.</p>
+<pre lang="html4strict"><select id="edtCity" name="city">
+    <option>- Enter your postal code -</option>
+</select></pre>
+<p>After making up a post code table in the database, I wrote up a php page that would return a list of cities associated with the given post code.</p>
+<p>Here is an example of the <a href="http://en.wikipedia.org/wiki/JSON">JSON</a> response from that page, when called with <em>5300</em> as post code:</p>
+<pre lang="javascript">{ cities : ['Andenne','Bonneville','Coutisse','Landenne','Maizeret','Namêche','Sclayn','Seilles','Thon','Vezin'] }</pre>
+<p>I then wrote my first AJAX script (early 2006), that would call this page with a <code>XMLHTTPRequest</code>. As soon as there were 4 digits in the <em>postal code</em> fields, the request was launched. Once the response received, the combobox was filled with options made using the received list.</p>
+<p>Using this technique, we enforced participants to enter a valid Belgian post code. Actually, that didn't enforce anything as participant could leave blank fields, but we could easily sort relevant contest participants in the database.</p>
+<h2>Accessibility Issue</h2>
+<p>Last year, I rebuild the website from ground and realized that there was an accessibility issue. What would happen to the poor people which don't run JavaScript? They would all be rejected even is they were Belgian!</p>
+<p>I had to find a way to make sure that people that didn't have JavaScript would still be able to fill the form in.</p>
+<h2>Second Solution</h2>
+<p>I thought of a simple way to avoid that. On the initial page, I replaced the <code>select</code> tag (Combo box) by an <code>input</code> tag (single line text input).</p>
+<pre lang="html4strict"><input type="text" id="edtCity" name="city" /></pre>
+<p>I then coded a event that would replace that <code>input</code> tag by a <code>select</code> tag.</p>
+<p class="note">I used the excellent <a href="http://mootools.net/">MooTools</a> JavaScript framework for this code.</p>
+<p>Here is the Javascript code:</p>
+<pre lang="javascript">window.addEvent('domready', function() {
+    //Replaces the input field by a select field
+    oldEdtCity = $('edtCity');
+    newEdtCity = $(document.createElement('select'));
+    newEdtCity.setAttribute('id', 'edtCity');
+    newEdtCity.setAttribute('name', 'city');
+    newEdtCity.options = new Option('- Enter your postal code -', '- Enter your postal code -');
+    oldEdtCity.parentNode.replaceChild(newEdtCity, oldEdtCity);
+    //Adding event watcher on the postcode field
+    $('edtPostcode').onkeyup = function(e) {
+        var target = new Event(e).target;
+        if (target.getValue().length  4) {
+            new Ajax('_ajax.php?', Object.toQueryString({'task': 'postcode', 'cp': $('edtPostcode').getValue()}), {
+                method: 'get',
+                onComplete: function(responseText) {
+                    //Function that will populate the select with cities returned by the ajax request
+                    var response = Json.evaluate(responseText);
+                    var cities = $('edtCity').options;
+                    cities.length = 0;
+                    if (response.cities ==  '') {
+                        cities = new Option('- No corresponding city -', '- No corresponding city -');
+                    }
+                    else {
+                        cities = new Option('- Choose -', '- Choose -');
+                        response.cities.each(function(city) {
+                            cities[cities.length] = new Option(city, city);
+                        });
+                    }
+                }
+            }).request();
+        }
+    };
+});</pre>
+<p>So, when the page loads, it contains a simple <code>input</code> tag, and once it has loaded, the Javascript replaces that <code>input</code> tag by a <code>select</code> tag.</p>
+<h2>Error Handling and Timeout</h2>
+<p>This is far from being perfect. What if the AJAX request fails or timeouts?</p>
+<p>Even if the the errors are different, the resolution is the same for both: simply turn back the <code>select</code> tag into a <code>input</code> tag. So in this case, one function will be called, no matter which error rises:</p>
+<pre lang="javascript">function requestFailure() {
+    //Replaces the select field by an input field
+    oldEdtCity = $('edtCity');
+    newEdtCity = $(document.createElement('input'));
+    newEdtCity.setAttribute('id', 'edtCity');
+    newEdtCity.setAttribute('name', 'city');
+    newEdtCity.setAttribute('type', 'text');
+    oldEdtCity.parentNode.replaceChild(newEdtCity, oldEdtCity);
+}</pre>
+<h3>Error Handling</h3>
+<p>As is, the <a href="http://mootools.net/">MooTools</a> framework didn't support error handling in Ajax object. However, one of this framework developer, <a href="http://clientside.cnet.com/">Aaron Newton</a>, wrote an <a href="http://clientside.cnet.com/code-snippets/ajax/mootools-ajax-extension-for-handling-errors-on-cnet/">Ajax extension</a> that is to be used with the framework in order to specify a function that will be called if the request fails.</p>
+<p class="note">As said before, when I wrote that code the MooTools framework didn't support error and timeout handling. As of now, the latest version of MooTools supports both error and timeout handling. I think I will soon rewrite a new version of this code using the latest MooTools version, as it is more elegant.</p>
+<p>Once this extension added, we simply need to give a <code>onFailure</code> parameter to Ajax object call in the previous code.</p>
+<p>Here is what the new Ajax object (abbreviated) call looks like :</p>
+<pre lang="javascript">new Ajax('_ajax.php?' + Object.toQueryString({'task': 'postcode', 'cp': $('edtPostcode').getValue()}), {
+    method: 'get',
+    onComplete: function(responseText) { [...] },
+    onFailure: requestFailure }
+).request();</pre>
+<p>That's it. If the request fails, <code>requestFailure</code> function is called.</p>
+<h3>Timeout Handling</h3>
+<p>Again, nothing for timeout handling in MooTools at the time I wrote that code.</p>
+<p>I used <a href="http://adactio.com/">Jeremy Keith</a> excellent technique described in his book <a href="http://bulletproofajax.com/">Bulletproof Ajax</a>.</p>
+<p>The technique is simple: after starting the request, simply launch a timer that cancels the request after a certain time. So when the requests takes too long, it is canceled and the <code>requestFailure</code> function is called:</p>
+<pre lang="javascript">var timer = setTimeout(function() {
+    ajx.cancel();
+    requestFailure();
+}, 5000);</pre>
+<p>If the request success, the <code>timer</code> must be stopped:</p>
+<pre lang="javascript">clearTimeout(timer);</pre>
+<p>So, adding all this code to the original function gives us the final code:</p>
+<pre lang="javascript">window.addEvent('domready', function() {
+    [...]
+    $('edtPostcode').onkeyup = function(e) {
+        var target = new Event(e).target;
+        var ajx, timer;
+        if (target.getValue().length == 4) {
+            ajx = new Ajax('_ajax.php?' + Object.toQueryString({'task': 'postcode', 'cp': $('edtPostcode').getValue()}), {
+                method: 'get',
+                onComplete: function(responseText) {
+                [..]
+                },
+                onFailure: requestFailure
+            });
+            timer = setTimeout(function() {
+                ajx.cancel();
+                requestFailure();
+            }, 5000);
+            ajx.request();
+        }
+    };
+});</pre>
+<p>I used a 5 seconds timers as this has to be fast. The user will not wait for a long time, especially as the <code>select</code> field directly follows the <code>input</code> field that launches the request.</p>
+<h2>Conclusion</h2>
+<p>The main point here was to show how to build a form that uses Ajax while making sure that users that don't use JavaScript will still be able to fill data in.</p>
+<p>So, what do you think? Is it usefull for you?</p>

@@ -1,0 +1,62 @@
+---
+layout: post
+title: Encrypt App.config section using PowerShell as a Post-build event
+date: 2009-03-24 14:51:35.000000000 +01:00
+categories: []
+tags:
+- App.config
+- Post-build event
+- PowerShell
+- Visual Studio
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>It is very easy to encrypt a section of the Web.config file using <a href="http://msdn.microsoft.com/en-us/library/k6h9cz8h(VS.80).aspx?ppud=4">Aspnet_regiis.exe</a> tool, but there is no equivalent tool to encrypt a section of an application configuration file (App.config). It can be done very easily in code, as explained in <a href="http://geekswithblogs.net/afeng/archive/2006/12/10/100821.aspx">this post</a>, but there is now way to do that automatically. So I decided to write a PowerShell script that would encode a section of the given application's configuration file.</p>
+<p>Here is what it looks like:</p>
+<p>
+<pre lang="PowerShell">param(
+  [String] $appPath = $(throw "Application exe file path is mandatory"),
+  [String] $sectionName = $(throw "Configuration section is mandatory"),
+  [String] $dataProtectionProvider = "DataProtectionConfigurationProvider"
+)
+
+#The System.Configuration assembly must be loaded
+$configurationAssembly = "System.Configuration, Version=2.0.0.0, Culture=Neutral, PublicKeyToken=b03f5f7f11d50a3a"
+[void] [Reflection.Assembly]::Load($configurationAssembly)
+
+Write-Host "Encrypting configuration section..."
+
+$configuration = [System.Configuration.ConfigurationManager]::OpenExeConfiguration($appPath)
+$section = $configuration.GetSection($sectionName)
+
+if (-not $section.SectionInformation.IsProtected)
+{
+  $section.SectionInformation.ProtectSection($dataProtectionProvider);
+  $section.SectionInformation.ForceSave = [System.Boolean]::True;
+  $configuration.Save([System.Configuration.ConfigurationSaveMode]::Modified);
+}
+
+Write-Host "Succeeded!"</pre></p>
+<p>Some explanation on the script:</p>
+<ul>
+<li>System.Configuration assembly must be loaded. To do this, I use a technique described in a <a href="http://www.leeholmes.com/blog/HowDoIEasilyLoadAssembliesWhenLoadWithPartialNameHasBeenDeprecated.aspx">post from Lee Holmes</a>. </li>
+<li>The default data protection provider is DataProtectionConfigurationProvider. Still, you can specify another provider (for example, RSAProtectedConfigurationProvider) as a third argument. </li>
+</ul>
+<p>Believe it or not, that was the easy part.</p>
+<p>The next step is to run this script automatically as a Post-build event in Visual Studio, so the .config file that is &quot;built&quot; is encrypted. Sounds very easy, but is actually tricky, I had to try many times to get it right.</p>
+<p>I will give it straight away, here is the command to put in the Post-build event:</p>
+<p>
+<pre lang="DOS">powershell "& ""C:\Documents and Settings\VlericP\My Documents\WindowsPowerShell\EncryptAppConfigSection.ps1""" '$(TargetPath)' 'connectionStrings'</pre></p>
+<p>There are lot of quotes, but this is the only way to get it working. For detailed explanations on why, see this post: <a href="http://poshoholic.com/2007/09/27/invoking-a-powershell-script-from-cmdexe-or-start-run/">Invoking a PowerShell script from cmd.exe (or Start | Run)</a>.</p>
+<p>Using this, you can have your App.config file unencrypted in your solution, and when you build the output .config file is encrypted.</p>

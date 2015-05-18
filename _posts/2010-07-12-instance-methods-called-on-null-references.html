@@ -1,0 +1,157 @@
+---
+layout: post
+title: Instance Methods Called on null References
+date: 2010-07-12 19:27:21.000000000 +02:00
+categories: []
+tags:
+- C#
+- call
+- callvirt
+- CLR
+- IL
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>In a <a href="http://www.pvle.be/2008/11/extension-methods-and-null-objects/">previous post</a>, I wrote how you can call Extension Methods on null references, as in fact the are static methods with one more parameter, the extended object itself.</p>
+<p>I’m currently reading CLR via C# (which is a fascinating read), and I was surprised to learn in chapter 6 how the CIL instructions <em>call</em> and <em>callvirt</em> actually work.</p>
+<p>What is amazing is that for methods called with the <em>call</em> instruction, the CLR does not check if the referenced object is null. The method call will succeed, but the <em>this</em> reference will be null in the instance method. Actually, in both cases, the reference to the object that the method was called on is passed as a hidden parameter to the method.</p>
+<p>Before examining this, another interesting fact is the that the C# compiler mostly emits <em>callvirt</em> instructions when calling a method, which checks if the reference is null. To test the call instruction easily, we will have to disassemble, modify then reassemble the following code:</p>
+<pre class="code"><span style="color: blue">public class </span><span style="color: #2b91af">SomeClass
+</span>{
+    <span style="color: blue">public </span><span style="color: #2b91af">String </span>GetHello()
+    {
+        <span style="color: blue">if </span>(<span style="color: blue">this </span>== <span style="color: blue">null</span>)
+        {
+            <span style="color: blue">return </span><span style="color: #a31515">&quot;Amazing!&quot;</span>;
+        }
+
+        <span style="color: blue">return </span><span style="color: #a31515">&quot;Hello&quot;</span>;
+    }
+}
+
+<span style="color: blue">class </span><span style="color: #2b91af">Program
+</span>{
+    <span style="color: blue">static void </span>Main(<span style="color: blue">string</span>[] args)
+    {
+        <span style="color: blue">var </span>o = <span style="color: blue">null as </span><span style="color: #2b91af">SomeClass</span>;
+        <span style="color: blue">var </span>hello = o.GetHello();
+
+        <span style="color: #2b91af">Console</span>.WriteLine(hello);
+    }
+}</pre>
+<p>Pretty dumb, right? Especially the if statement where we check if <em>this</em> is null. It’s seems logical to most of us that this will throw a NullReferenceException. However, this is just to get the compiler to build us code that is very close to what to achieve, so we don’t have to write IL ourselves.</p>
+<p>After running <a href="http://msdn.microsoft.com/en-us/library/f7dy01k1(VS.80).aspx">ILDasm.exe</a> on the assembly, this is what we have in the Main method:</p>
+<pre class="code">  .method private hidebysig static void  Main(string[] args) cil managed
+  {
+    .entrypoint
+    // Code size       18 (0x12)
+    .maxstack  1
+    .locals init ([0] class Sandbox09.SomeClass o,
+             [1] string hello)
+    IL_0000:  nop
+    IL_0001:  ldnull
+    IL_0002:  stloc.0
+    IL_0003:  ldloc.0
+    IL_0004:  callvirt   instance string Sandbox09.SomeClass::GetHello()
+    IL_0009:  stloc.1
+    IL_000a:  ldloc.1
+    IL_000b:  call       void [mscorlib]System.Console::WriteLine(string)
+    IL_0010:  nop
+    IL_0011:  ret
+  } // end of method Program::Main</pre>
+<p>As we can see, the call to GetHello is done with the <em>callvirt</em> instruction. As this instruction checks if the object is null (and in this case, it is), this will fail at runtime.</p>
+<p>Just to make sure, I used <a href="http://msdn.microsoft.com/en-us/library/496e4ekx(VS.80).aspx">ILasm.exe</a> to build the assembly and ran it, here is what it outputs:</p>
+<blockquote>
+<p><em>Unhandled Exception: System.NullReferenceException: Object reference not set to an instance of an object.<br />
+      <br />&#160;&#160; at Pvle.Program.Main(String[] args)</em></p>
+</blockquote>
+<p>Now, let’s try to replace the <em>callvirt</em> by <em>call</em> to see how it behaves.</p>
+<pre class="code">    IL_0004:  call       instance string Sandbox09.SomeClass::GetHello()</pre>
+<p>Now, run it again trough <a href="http://msdn.microsoft.com/en-us/library/496e4ekx(VS.80).aspx">ILasm.exe</a> once more and run it. Here’s what it outputs:</p>
+<blockquote>
+<p>Amazing!</p>
+</blockquote>
+<p>The actual difference between <em>call</em> and <em>callvirt</em> is that <em>call</em> calls the method on the compile time type of the object, so there is no need to check if the reference is null. The object will be passed as a hidden parameter to the method and will be references as <em>this</em>. It’s very similar to extension methods.</p>
+<p><em>Callvirt</em>, on the other hand, will resolve the method that is to be called at runtime, depending on the runtime type of the object, so the object cannot be null. The CLR enforces this check at runtime.</p>
+<h3>What About Value Types?</h3>
+<p>For value types, it’s a bit different. As they are implicitly sealed, the only methods that are virtual are the ones that are defined in <a href="http://msdn.microsoft.com/en-us/library/system.object.aspx">System.Object</a>. Oh wait, there is another case: if the value type is cast to an interface it implements, calls to methods on that variable will be using <em>callvirt</em>, as the value type will have to be boxed.</p>
+<p>Here is some sample code that demonstrates this:</p>
+<pre class="code"><span style="color: blue">public interface </span><span style="color: #2b91af">ISomeInterface
+</span>{
+    <span style="color: #2b91af">String </span>GetHelloFromInterface();
+}
+
+<span style="color: blue">public struct </span><span style="color: #2b91af">SomeClass </span>: <span style="color: #2b91af">ISomeInterface
+</span>{
+    <span style="color: blue">public </span><span style="color: #2b91af">String </span>GetHello()
+    {
+        <span style="color: blue">return </span><span style="color: #a31515">&quot;Hello&quot;</span>;
+    }
+
+    <span style="color: blue">public override string </span>ToString()
+    {
+        <span style="color: blue">return </span><span style="color: #a31515">&quot;Hello&quot;</span>;
+    }
+
+    <span style="color: blue">public </span><span style="color: #2b91af">String </span>GetHelloFromInterface()
+    {
+        <span style="color: blue">return </span><span style="color: #a31515">&quot;Hello from interface&quot;</span>;
+    }
+}
+
+<span style="color: blue">class </span><span style="color: #2b91af">Program
+</span>{
+    <span style="color: blue">static void </span>Main(<span style="color: blue">string</span>[] args)
+    {
+        <span style="color: blue">var </span>o = <span style="color: blue">new </span><span style="color: #2b91af">SomeClass</span>();
+        <span style="color: blue">var </span>hello = o.GetHello();
+        
+        o.ToString();
+        o.GetHelloFromInterface();
+        ((<span style="color: #2b91af">ISomeInterface</span>)o).GetHelloFromInterface();
+        o.GetHashCode();
+    }
+}</pre>
+<p>And here is the corresponding IL for the Main method:</p>
+<pre class="code">  .method private hidebysig static void  Main(string[] args) cil managed
+  {
+    .entrypoint
+    // Code size       66 (0x42)
+    .maxstack  1
+    .locals init ([0] valuetype Pvle.SomeClass o,
+             [1] string hello)
+    IL_0000:  nop
+    IL_0001:  ldloca.s   o
+    IL_0003:  initobj    Pvle.SomeClass
+    IL_0009:  ldloca.s   o
+    IL_000b:  call       instance string Pvle.SomeClass::GetHello()
+    IL_0010:  stloc.1
+    IL_0011:  ldloca.s   o
+    IL_0013:  constrained. Pvle.SomeClass
+    IL_0019:  callvirt   instance string [mscorlib]System.Object::ToString()
+    IL_001e:  pop
+    IL_001f:  ldloca.s   o
+    IL_0021:  call       instance string Pvle.SomeClass::GetHelloFromInterface()
+    IL_0026:  pop
+    IL_0027:  ldloc.0
+    IL_0028:  box        Pvle.SomeClass
+    IL_002d:  callvirt   instance string Pvle.ISomeInterface::GetHelloFromInterface()
+    IL_0032:  pop
+    IL_0033:  ldloca.s   o
+    IL_0035:  constrained. Pvle.SomeClass
+    IL_003b:  callvirt   instance int32 [mscorlib]System.Object::GetHashCode()
+    IL_0040:  pop
+    IL_0041:  ret
+  } // end of method Program::Main</pre>
+<p>We can see that when calling the method trough the interface, the value type is boxed.</p>
+<p>I find this very interesting in understanding how calls to methods actually work. Getting your nose in IL is always a good idea when you want to see what happening under the hood, but I have to admit that this is the first time that I modify it and reassemble it.</p>

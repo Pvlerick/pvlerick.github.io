@@ -1,0 +1,67 @@
+---
+layout: post
+title: Double check locking Extension Method for ASP.NET Cache
+date: 2010-06-22 13:26:47.000000000 +02:00
+categories: []
+tags:
+- ASP.NET
+- C#
+- Caching
+- SharePoint
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>On my current project, we need to cache some of the results retreived when querying into SharePoint. As the retrieving operation is quite expensive (as always with SharePoint) and that performances are very important, we must make sure that it is only executed once.</p>
+<p>So, the way to do this is to use the double check locking mechanism. The idea is to check if the cache contains the item sought, if it does not contain it, lock then check again, in case another thread added it while we were acquiring the lock.</p>
+<p>I wrote a generic extension method to do this, to which the lock handle to lock on is given as a parameter, as well as the function used to retrieve the item if it is not in the cache. In this case, the retrieved item will be stored in the cache (and of course returned to the called).</p>
+<p>Code speaks louder than words:</p>
+<pre class="code"><span style="color: blue">public static class </span><span style="color: #2b91af">CacheExtension
+</span>{
+    <span style="color: blue">public static </span>T SetAndGetItemFromCache&lt;T&gt;(<span style="color: blue">this </span><span style="color: #2b91af">Cache </span>cache, <span style="color: #2b91af">String </span>cacheKey, <span style="color: #2b91af">Object </span>lockHandle, <span style="color: #2b91af">Func</span>&lt;<span style="color: #2b91af">Cache</span>, T&gt; addItemToCache)
+    {
+        <span style="color: #2b91af">Object </span>item = cache.Get(cacheKey);
+
+        <span style="color: blue">if </span>(item == <span style="color: blue">null</span>)
+        {
+            <span style="color: blue">lock </span>(lockHandle)
+            {
+                item = cache.Get(cacheKey);
+
+                <span style="color: blue">if </span>(item == <span style="color: blue">null</span>)
+                {
+                    item = addItemToCache(cache);
+                }
+                <span style="color: blue">else
+                </span>{
+                    <span style="color: green">//The sought item has been added meanwhile in another thread/process
+                </span>}
+            }
+        }
+        <span style="color: blue">else
+        </span>{
+            <span style="color: green">//Cache contains the key, return it
+        </span>}
+
+        <span style="color: blue">if </span>(item <span style="color: blue">is </span>T)
+        {
+            <span style="color: blue">return </span>(T)item;
+        }
+        <span style="color: blue">else
+        </span>{
+            <span style="color: green">//The Object in the cache is not of type T, some other component might be using that key
+             </span><span style="color: blue">throw new </span><span style="color: #2b91af">ApplicationException</span>(<span style="color: #2b91af">String</span>.Format(<span style="color: #a31515">&quot;Object retreived from the cache is not of the expected {0} type. Another component might be using the same key to store in the cache.&quot;</span>, <span style="color: blue">typeof</span>(T).FullName));
+        }
+    }
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>This can be used on any <a href="http://msdn.microsoft.com/en-us/library/system.web.caching.cache.aspx">System.Web.Caching.Cache</a> object.</p>

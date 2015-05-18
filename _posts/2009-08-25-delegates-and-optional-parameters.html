@@ -1,0 +1,48 @@
+---
+layout: post
+title: Delegates and Optional Parameters
+date: 2009-08-25 12:24:25.000000000 +02:00
+categories: []
+tags:
+- C# 4.0
+- Delegates
+- Optional Parameters
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>C# 4.0 adds a bunch of new features, amongst which there is the Optional Parameters. If you don’t know about them and their drawbacks, please read <a href="http://blog.bartdesmet.net/blogs/bart/archive/2008/10/31/c-4-0-feature-focus-part-1-optional-parameters.aspx">this</a>.</p>
+<p>So, using this new syntax, you can specify so of the parameters to be optional, and have a default value in case they are not specified. Did you know that this applies to delegates too?</p>
+<p>Here’s a simple delegate type declaration:</p>
+<pre class="code"><span style="color: blue">delegate void </span><span style="color: #2b91af">PrintName</span>(<span style="color: #2b91af">String </span>name = <span style="color: #a31515">&quot;Philippe&quot;</span>);</pre>
+<p><a href="http://11011.net/software/vspaste"></a>Given this<em> delegate type</em>, you could think that any method receiving an optional String parameter and returning void would fit. Actually, it’s not the case. Any method receiving a String parameter and returning void will fit. If the parameter is not given when invoking the delegate, the optional value of the parameter will be used.</p>
+<p>Here is a working example:</p>
+<pre class="code"><span style="color: blue">static void </span>PrintToScreen(<span style="color: #2b91af">String </span>name)
+{
+    <span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;Hello in console from {0}&quot;</span>, name);
+}
+
+<span style="color: blue">static void </span>Main(<span style="color: blue">string</span>[] args)
+{
+    <span style="color: #2b91af">PrintName </span>p = <span style="color: #2b91af">OptionalsParametersOnDelegates</span>.PrintToScreen;
+
+    p();
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>This code will call the methods <em>PrintToScreen</em> with “Philippe” as <em>argument</em> for the name <em>parameter</em>. The <em>delegate instance</em> <strong>p</strong> can also be called with any String argument, which will be passed to the methods in the <em>delegate invocation list</em>.</p>
+<p>Now, what happens if the method <em>PrintToScreen</em> also has an optional argument?</p>
+<pre class="code"><span style="color: blue">static void </span>PrintToScreen(<span style="color: #2b91af">String </span>name = <span style="color: #a31515">&quot;Bill&quot;</span>)
+{
+    <span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;Hello in console from {0}&quot;</span>, name);
+}</pre>
+<p>Making the name parameter optional and giving it a default value will not change the output of the previous code. It’s actually quite easy to explain: when the <em>delegate instance</em> is called with no parameter, the methods in the <em>invocation list</em> are called with the default value of parameter defined in the <em>delegate type</em>, in this case “Philippe”. If it is called with an argument, then the argument is passed along to the methods in the invocation list.</p>

@@ -1,0 +1,79 @@
+---
+layout: post
+title: Boolean Logical Operators and Boolean Conditional Logical Operators
+date: 2009-06-04 20:32:30.000000000 +02:00
+categories: []
+tags:
+- Boolean Logical Operators
+- C#
+- Java
+- Logical Operators
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>I’m often amazed that most programmer don’t know that in C# and in Java you can use the <em>simple</em>&#160;<strong>&amp;</strong> and <strong>|</strong> as logical operators. It seems than most people don’t event know that they exist!</p>
+<p>But what’s the difference between these <em>simple</em> and <em>double</em> logical operators? </p>
+<h3>Back To Basics</h3>
+<p>Let’s see in the <a href="http://msdn.microsoft.com/en-us/library/aa691309(VS.71).aspx">C# language specifications</a>:</p>
+<blockquote><p><em>The result of <code>x</code> <code>&amp;</code> <code>y</code> is <code>true</code> if both <code>x</code> and <code>y</code> are <code>true</code>. Otherwise, the result is <code>false</code>.</em></p>
+<p><em>The result of <code>x</code> <code>|</code> <code>y</code> is <code>true</code> if either <code>x</code> or <code>y</code> is <code>true</code>. Otherwise, the result is <code>false</code>.</em></p>
+</blockquote>
+<p>Now let’s have a look in <a href="http://java.sun.com/docs/books/jls/third_edition/html/expressions.html#15.22.2">Java language specifications</a>:</p>
+<blockquote><p><a name="5244"></a><em>For <code>&amp;</code>, the result value is <code>true</code> if both operand values are <code>true</code>; otherwise, the result is <code>false</code>. </em></p>
+<p><em>For <code>|</code>, the result value is <code>false</code> if both operand values are <code>false</code>; otherwise, the result is <code>true</code>.</em></p>
+</blockquote>
+<p>It’s pretty clear, it does what most of the people would expect them to do, <strong>and</strong> and <strong>or</strong> operations.</p>
+<p>But, then, what are those <strong>&amp;&amp;</strong> and <strong>||</strong> that most developers use everywhere, wasting bytes like there’s now tomorrow?</p>
+<p>Again, specifications are there to give full explanations.</p>
+<p>In <a href="http://msdn.microsoft.com/en-us/library/aa691310(VS.71).aspx">C#</a>:</p>
+<blockquote><p><em>The <code>&amp;&amp;</code> and <code>||</code> operators are conditional versions of the <code>&amp;</code> and <code>|</code> operators: </em></p>
+<ul>
+<li><em>The operation <code>x</code> <code>&amp;&amp;</code> <code>y</code> corresponds to the operation <code>x</code> <code>&amp;</code> <code>y</code>, except that <code>y</code> is evaluated only if <code>x</code> is <code>true</code>. </em></li>
+<li><em>The operation <code>x</code> <code>||</code> <code>y</code> corresponds to the operation <code>x</code> <code>|</code> <code>y</code>, except that <code>y</code> is evaluated only if <code>x</code> is <code>false</code>.</em> </li>
+</ul>
+</blockquote>
+<p>And in <a href="http://java.sun.com/docs/books/jls/third_edition/html/expressions.html#15.23">Java</a>:</p>
+<blockquote><p><em>The <code>&amp;&amp;</code> operator is like <code>&amp;</code> </em><a href="http://java.sun.com/expressions.html#5242"><em>(§15.22.2)</em></a><em>, but evaluates its right-hand operand only if the value of its left-hand operand is <code>true</code>.</em></p>
+<p><em>The <code>||</code> operator is like <code>|</code> </em><a href="http://java.sun.com/expressions.html#5242"><em>(§15.22.2)</em></a><em>, but evaluates its right-hand operand only if the value of its left-hand operand is <code>false</code>.</em></p>
+</blockquote>
+<p>Tadaaaam! Now it makes perfect sense, doesn’t it? These operators that most of the people use everywhere are smart and only evaluate the right-side if it is of any use (if left-hand side is <em>true</em> for <strong>and</strong>, if left-hand side is <em>false</em> for <strong>or</strong>).</p>
+<p>So, let’s give a small example of how this can be useful. Let’s pretend you have an object that has a member that can be null. With these operators, you can test it without any fear of the dreaded <a href="http://msdn.microsoft.com/en-us/library/system.nullreferenceexception.aspx">NullReferenceException</a> or <a href="http://java.sun.com/javase/6/docs/api/java/lang/NullPointerException.html">NullPointerException</a>. Here is a small piece of C# code that shows the point:</p>
+<pre class="code"><span style="color: blue">var </span>p = <span style="color: blue">new </span><span style="color: #2b91af">Parent </span>{ Name = <span style="color: #a31515">&quot;Father&quot; </span>};
+p.Childs = <span style="color: blue">new </span><span style="color: #2b91af">Person</span>[] { <span style="color: blue">new </span><span style="color: #2b91af">Person</span>() { Name = <span style="color: #a31515">&quot;Son&quot; </span>} };
+
+<span style="color: blue">if </span>(p.Childs != <span style="color: blue">null </span>&amp;&amp; p.Childs.ElementAt(0).Name != <span style="color: blue">null</span>)
+{
+    <span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;First Child's name: {0}&quot;</span>, 
+        p.Childs.ElementAt(0).Name);
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p><a href="http://11011.net/software/vspaste"></a>If Child collection was left <em>null</em>, this code would still work even though <em>p.Childs.ElementAt(0)</em> would normally throw an <a href="http://msdn.microsoft.com/en-us/library/system.argumentnullexception.aspx">ArgumentNullException</a>. As <em>p.Childs != null</em> returns false, the right-hand operand is not evaluated so no exception is thrown.</p>
+<p>Now, as you may say “<em>Well in this case, why does it matter? Let’s use <strong>&amp;&amp;</strong> and <strong>||</strong> everywhere, so we make no mistake!”</em>. Technically, it is true. However, as one of my <a href="http://www.uclouvain.be/">University</a> <a href="http://www.info.ucl.ac.be/Bienvenue/Academiques/Lecharlier/">teacher</a> said:</p>
+<blockquote>
+<p>Les gens qui utilisent les opérateurs conditionnels booléens partout sont des gens qui ne savent pas ce qu'ils font.</p>
+</blockquote>
+<p>Translation: “<em>Peoples who use conditional logical operators everywhere are peoples that don’t know what they're doing</em>”.</p>
+<p>Of course, his point was that you should understand the code you are writing and that you should know when which part of an expression can be evaluated. I have no clue if there is a performance gain when using non conditional operators, nor if there is any compiler optimization of any kind.</p>
+<h3>The Third Operator</h3>
+<p>There is also a third operator in both languages: <strong>^</strong>.</p>
+<p>In <a href="http://msdn.microsoft.com/en-us/library/aa691309(VS.71).aspx">C#</a>:</p>
+<blockquote>
+<p><em>The result of <code>x</code> <code>^</code> <code>y</code> is <code>true</code> if <code>x</code> is <code>true</code> and <code>y</code> is <code>false</code>, or <code>x</code> is <code>false</code> and <code>y</code> is <code>true</code>. Otherwise, the result is <code>false</code>. When the operands are of type <code>bool</code>, the <code>^</code> operator computes the same result as the <code>!=</code> operator.</em></p>
+</blockquote>
+<p>In <a href="http://java.sun.com/docs/books/jls/third_edition/html/expressions.html#15.22.2">Java</a>:</p>
+<blockquote>
+<p><a name="5245"></a><em>For <code>^</code>, the result value is <code>true</code> if the operand values are different; otherwise, the result is <code>false</code>.</em></p>
+</blockquote>
+<p>I’v never seen this operator used. As pointed in C# specification, this operator has the same result as the <strong>!=</strong> operator.</p>
+<p>And, of course, it doesn’t make any sense to have a <strong>^^</strong> operator, as both operand have to be evaluated in all the cases…</p>

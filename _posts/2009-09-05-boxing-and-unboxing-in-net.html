@@ -1,0 +1,65 @@
+---
+layout: post
+title: Boxing and Unboxing in .NET
+date: 2009-09-05 18:15:39.000000000 +02:00
+categories: []
+tags:
+- .NET
+- C#
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>I realized that the way boxing and unboxing works in .NET was not something I knew well, so I decided to write some small recap along with code to test boxing/unboxing behaviors.</p>
+<h3>Some Theory</h3>
+<p>In .NET, even if value types derive from the uber root object <a href="http://msdn.microsoft.com/en-us/library/system.object.aspx">System.Object</a>, they need the special <strong>boxing</strong> operation to be treaded as <em>object</em>.</p>
+<p>A good explanation is given in the <a href="http://msdn.microsoft.com/en-us/library/aa664476(VS.71).aspx">C# Language Specification</a>:</p>
+<blockquote><p><em>A value of a class type can be converted to type <code>object</code> or to an interface type that is implemented by the class simply by treating the reference as another type at compile-time. Likewise, a value of type <code>object</code> or a value of an interface type can be converted back to a class type without changing the reference (but of course a run-time type check is required in this case).</em></p>
+<p><em>Since structs are not reference types, these operations are implemented differently for struct types. When a value of a struct type is converted to type <code>object</code> or to an interface type that is implemented by the struct, a boxing operation takes place. Likewise, when a value of type <code>object</code> or a value of an interface type is converted back to a struct type, an unboxing operation takes place.</em></p>
+</blockquote>
+<p>So, when a value type needs to be converted to an <em>object</em>, it is <strong>boxed</strong> in a reference type. As stated, <strong>boxing</strong> means that the value type gets copied in the wrapping reference type.</p>
+<blockquote><p><em>A boxing conversion implies making a copy of the value being boxed. This is different from a conversion of a reference-type to type <code>object</code>, in which the value continues to reference the same instance and simply is regarded as the less derived type <code>object</code>.</em></p>
+</blockquote>
+<p>The important thing to bear in mind is that boxing and unboxing happens automatically. Everywhere an <strong>reference type</strong> is expected but a <strong>value type</strong> is used instead, the value type is automatically boxed.</p>
+<p>Another important point is that if the value type has overrides some of the virtual methods inherited from <em>object</em>, invocation of these methods on the value type does not require boxing.</p>
+<h3>Some Examples</h3>
+<p>Now, let’s see how it works, and what are the caveats.</p>
+<p>A first interesting case is directly taken from <a href="http://srtsolutions.com/blogs/billwagner/default.aspx">Bill Wagner’s</a> “<a href="http://www.amazon.com/Effective-Specific-Ways-Improve-Your/dp/0321245660">Effective C#</a>”. Consider this code:</p>
+<pre class="code"><span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;A few numbers:{0}, {1}, {2}&quot;</span>, 25, 32, 50);</pre>
+<p><a href="http://11011.net/software/vspaste"></a> </p>
+<p>WriteLine takes an array of <em>object</em> references as parameters. This means that the three value types will be boxed before calling the ToString() method on them. To avoid this, ToString() method should explicitely be called on each of these <em>int</em> in order to provide WriteLine with <em>string</em> which are reference types, so there is no boxing.</p>
+<pre class="code"><span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;A few numbers:{0}, {1}, {2}&quot;</span>, 25.ToString(), 32.ToString(), 50.ToString());</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>So, that’s one thing to keep in mind. It’s good for performances reasons, but it doesn’t introduce any bug.</p>
+<p>The next step is the copy of the value type in the box itself, meaning that any change to the copied value type in the box will not be reflected in the original copy. Also, when unboxing, the value from the box is copied again.</p>
+<pre class="code"><span style="color: blue">int </span>i = 5;
+<span style="color: blue">var </span>j = (<span style="color: blue">object</span>)i;
+
+i++;
+
+<span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;i: {0}&quot;</span>, i); <span style="color: green">//Prints 6
+</span><span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;j: {0}&quot;</span>, j); <span style="color: green">//Prints 5
+
+</span>j = (<span style="color: blue">object</span>)i;
+<span style="color: blue">var </span>k = (<span style="color: blue">int</span>)j;
+
+k++;
+
+<span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;j: {0}&quot;</span>, j); <span style="color: green">//Prints 6
+</span><span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;k: {0}&quot;</span>, k); <span style="color: green">//Prints 7</span></pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>When you think about it, is quite easy and it makes a lot of sense, as in C#, things are copied by value (meaning that when you copy a reference type, you copy the value of the reference, which is what the variable stores).</p>
+<p>Last funny thing:</p>
+<pre class="code"><span style="color: #2b91af">Object</span>.ReferenceEquals(5, 5); <span style="color: green">//Returns false</span></pre>
+<p><a href="http://11011.net/software/vspaste"></a>It’s easy to understand. The two value types (5 and 5) are each boxed in a separate reference type, which don’t have the same reference.</p>
+<p>A small warning tough, everything I write here is from quite trusted sources, but it may happen that I misunderstood something, so ask a real expert if you want to be sure…</p>

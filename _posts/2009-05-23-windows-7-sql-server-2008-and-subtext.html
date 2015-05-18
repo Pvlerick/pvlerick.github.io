@@ -1,0 +1,51 @@
+---
+layout: post
+title: Windows 7, SQL Server 2008 and Subtext
+date: 2009-05-23 15:07:06.000000000 +02:00
+categories: []
+tags:
+- Sql Server 2008
+- Subtext
+- Windows 7
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>As I'm now back to Java for work and miss .NET, I’m going to mess a bit with open source projects. The one I picked is <a href="http://www.subtextproject.com/">Subtext</a>, a blog engine written in ASP.NET. I’m not an ASP.NET guru, so messing around (and maybe even help, who knows?) with a project like this will likely get me some experience.</p>
+<p>I just installed Windows 7 RC on my PC, so I'm starting from scratch here. I installed Visual Studio 2008 Standard edition, then SQL Server 2008 Express. The code that I checked out from Subtext's SVN doesn't build with that configuration, it needs some tweaking.</p>
+<p>As I have been struggling to get the project to build, I writing a small post to summarize all the issues that I had and how I solved them.</p>
+<h3>SQLDMO</h3>
+<p>The first error that you will encounter when trying to build Subtext out of the SVN is this one:</p>
+<blockquote><p>Type or namespace name SQLDMO could not be found </p></blockquote>
+<p>SQLDMO is deprecated in SQL Server 2008. However, as pointed in <a href="http://groups.google.com/group/subtext/browse_thread/thread/da47bc628d2f51dd?pli=1">this forum thread</a>, there is a <a href="http://www.microsoft.com/downloads/details.aspx?FamilyId=228DE03F-3B5A-428A-923F-58A033D316E1&amp;displaylang=en">backward compatibility pack</a>.</p>
+<h3>References in UnitTests.Subtext</h3>
+<p>In UnitTests.Subtext project, some of the references are broken.</p>
+<p><a href="http://www.pvle.be/wp-content/2009/05/vs9unittestssubtext.png"><img style="border-right-width: 0px; display: block; float: none; border-top-width: 0px; border-bottom-width: 0px; margin-left: auto; border-left-width: 0px; margin-right: auto" title="VS9UnitTestsSubtext" border="0" alt="VS9UnitTestsSubtext" src="assets/vs9unittestssubtext-thumb.png" width="275" height="313" /></a></p>
+<p>As stated <a href="http://social.msdn.microsoft.com/Forums/en-US/sqltools/thread/252adaa4-fc12-436d-91df-a2e8a98c7f2f/">here</a>, these DLLs from SQL Server 2005 have been removed from SQL Server 2008.</p>
+<p>Delete the references to:</p>
+<ul>
+<li>Microsoft.SqlServer.ConnectionInfo </li>
+<li>Microsoft.SqlServer.Smo </li>
+<li>Microsoft.SqlServer.SmoEnum </li>
+<li>Microsoft.SqlServer.SqlEnum </li>
+</ul>
+<p>The add the references back using “Add Reference…” dialog.</p>
+<p>However, this is not sufficient. The project will not build and still complain:</p>
+<blockquote><p>The type 'Microsoft.SqlServer.Management.Sdk.Sfc.IDmfFacet' is defined in an assembly that is not referenced. You must add a reference to assembly 'Microsoft.SqlServer.Management.Sdk.Sfc, Version=10.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91'. </p></blockquote>
+<p>Again, using the “Add Reference…” dialog, add a reference to Microsoft.SqlServer.Management.Sdk.Sfc.</p>
+<p><a href="http://www.pvle.be/wp-content/2009/05/vs9unittestssubtextreference.png"><img style="border-bottom: 0px; border-left: 0px; display: block; float: none; margin-left: auto; border-top: 0px; margin-right: auto; border-right: 0px" title="VS9UnitTestsSubtextReference" border="0" alt="VS9UnitTestsSubtextReference" src="assets/vs9unittestssubtextreference-thumb.png" width="486" height="412" /></a></p>
+<p>This will leave you with only two Warnings about references to CookComputing.XmlRpcV2 and Microsoft.ApplicationBlocks.Data.</p>
+<p><a href="http://www.pvle.be/wp-content/2009/05/vs9unittestssubtextwarnings.png"><img style="border-right-width: 0px; display: block; float: none; border-top-width: 0px; border-bottom-width: 0px; margin-left: auto; border-left-width: 0px; margin-right: auto" title="VS9UnitTestsSubtextWarnings" border="0" alt="VS9UnitTestsSubtextWarnings" src="assets/vs9unittestssubtextwarnings-thumb.png" width="497" height="127" /></a></p>
+<p>However, in this state you can build the project completely. If you delete the references in the project, it will not build anymore, for a reason that I still have to identify…</p>
+<h3>And Now?</h3>
+<p>Well, technically you can build and deploy now. I’ll talk about that in coming post.</p>

@@ -1,0 +1,73 @@
+---
+layout: post
+title: Java Inheritance VS C# Inheritance
+date: 2009-06-19 18:06:36.000000000 +02:00
+categories: []
+tags:
+- C#
+- Inheritance
+- Java
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>This topic is very basic, but I felt like writing something on simple subjects that may be misunderstood. It is also a good excuse to go in language specifications and read all the details that most of the people don't like to read... As I'm working in Java now, I quite like to compare the two languages to see where are the differences and make sure I don't do any silly mistake.</p>
+<p>So, when it comes to inheritance, there is a big difference between Java and C#.</p>
+<h3></h3>
+<h3>Java Inheritance</h3>
+<p>In a Java <em>subclass</em>, you can override any method of the <em>superclass</em>. The method that is to be called is always determined at run time. So for example, if you write code like this:</p>
+<pre class="code"><span style="color: #7f0055">public class </span>Parent {
+    <span style="color: #7f0055">public </span>String sayHello() {
+        <span style="color: #7f0055">return </span><span style="color: #2a00ff">"Hello from Parent"</span>;
+    }
+}
+
+<span style="color: #7f0055">public class </span>Child <span style="color: #7f0055">extends </span>Parent {
+    <span style="color: #7f0055">public </span>String sayHello() {
+        <span style="color: #7f0055">return </span><span style="color: #2a00ff">"Hello from Child"</span>;
+    }
+}</pre>
+<p>If you create a new instance of the <em>Child</em> class, when you call the <em>sayHello()</em> method, it is always the <em>Child</em> one that will be called, no matter what the declaration class is. So, you can teat an instance of <em>Child</em> as an instance of <em>Parent</em>, but the methods called will be the ones from <em>Child</em> (if they are overriden, of course).</p>
+<p>Code like this:</p>
+<pre class="code">Parent o = <span style="color: #7f0055">new </span>Child();
+System.<span style="color: #0000c0">out</span>.println(o.sayHello());</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>will output this:</p>
+<blockquote>
+<p>Hello from Child</p>
+</blockquote>
+<h3>C# Inheritance</h3>
+<p>In C#, things are a bit different. C# language needs to be told which method can be overriden (declared as <em>virtual</em>), and which method overrides (declared as <em>override</em>). So to have the same behavior as Java, C# code has to look like this:</p>
+<pre class="code"><span style="color: blue">class </span><span style="color: #2b91af">Parent
+</span>{
+    <span style="color: blue">public virtual </span><span style="color: #2b91af">String </span>SayHello()
+    {
+        <span style="color: blue">return </span><span style="color: #a31515">"Hello from Parent"</span>;
+    }
+}
+
+<span style="color: blue">class </span><span style="color: #2b91af">Child </span>: <span style="color: #2b91af">Parent
+</span>{
+    <span style="color: blue">public override </span><span style="color: #2b91af">String </span>SayHello()
+    {
+        <span style="color: blue">return </span><span style="color: #a31515">"Hello from Child"</span>;
+    }
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a>If the virtual and override are omitted (or just the override, actually), then it is the Parent's method that is executed when the Child object is declared as Parent.</p>
+<p>In C# language specification, there is a clear explanation on how is behaves:</p>
+<blockquote>
+<p>In a virtual method invocation, the run-time type of the instance for which that invocation takes place determines the actual method implementation to invoke. In a non-virtual method invocation, the compile-time type of the instance is the determining factor.</p>
+</blockquote>
+<h3>Summary</h3>
+<p>To sum it up, in Java the method called will be determined by the instantiation class, while in C# it will depend on how the class and the calling code is written. C# gives you much more flexibility, but it is more complicated and the capacity for a class to override a method is determined by its parent class. With Java, you loose the ability to call the parent's method, but is that very useful? On the other hand, C# ensures that if you don't want a method to be overriden, it won't be.</p>
+<p>Oh and we forgot to talk about the <strong>new</strong> keyword in C#. I never came across code that used it, but a nice description is given <a href="http://msdn.microsoft.com/en-us/library/ms173153.aspx">here</a>.</p>

@@ -1,0 +1,38 @@
+---
+layout: post
+title: A Tale of Code Review…
+date: 2012-08-07 21:57:56.000000000 +02:00
+categories: []
+tags:
+- C#
+- Code Review
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>A few years ago, I was working on a project where our client asked for code review by experts from another company. The idea behind this was to assess that we were doing a good job, fair enough. Since they didn’t have any in-house experts on the matter, the only choice left was to hire experts on the topic to review our work.</p>
+<p>I don’t remember all the details of this code review, but I have two remarks that distinctly remember because they shocked me.</p>
+<h2>No Need to Have a Static Private Object to Lock On, Just Lock the Type</h2>
+<p>Now when I was told that, I was hit very hard because I was certain that the language specifications specifically mentioned that as a bad practice. Turns out that I remembered well: <a href="http://msdn.microsoft.com/en-us/library/c5kehkcz">http://msdn.microsoft.com/en-us/library/c5kehkcz</a>.</p>
+<p>The good thing is that this one, I managed to avoid having to change it in the code. I don’t remember very well the why, but it was a small victory.</p>
+<h2>Don’t Use the “+” Operator on String, Use String.Concat</h2>
+<p>This one was also a good one. When I was told that I lost all hopes that these experts would be useful, as this comment revealed their ignorance of the C# compiler behavior. Not that I think everyone should know that, but I don’t consider myself as a C# guru, but I believe that any enthusiast that played with reflector a little bit should have noticed that.</p>
+<p>Not only the “+” operator is replaced by <a href="http://msdn.microsoft.com/en-us/library/system.string.concat.aspx">String.Concat</a> call if the content of both operand is not known at compile time, but if both are known at compile time then it is simply replaced by one single String! So, applying this guideline did reduce performances… Not to a noticeable way, I agree, but having to go in your code and replace good stuff with something not as good is not a pleasant experience.</p>
+<p>The “fun” part is that actually we also had the String.Concat comment for the “+=” operator. So, one of my colleague&#160; went through the code and replaced all the</p>
+<pre class="code"><span style="color: black">s1 += s2;</span></pre>
+<p>by</p>
+<pre class="code"><span style="color: #2b91af">String</span><span style="color: black">.Concat(s1, s2);</span></pre>
+<p>which is wrong since the return value is ignored, so original string is not modified. Not only this was a pointless change, but bugs were introduced when doing that mindless task.</p>
+<h2>Conclusion</h2>
+<p>I don’t know if there is anything to be concluded from this experience. In my case, the advices provided were mostly useless if not harmful. My personal conclusion is that real experts are a rare breed, and it’s not because someone labeled as an expert and expensive that he is. Even if he comes from a big corporation…</p>
+<p>Now there is also a conflict of interest here. When an expert is dispatched on this kind of mission, it would be very difficult to justify his price if he didn’t have anything to comment on. So whatever you have done, the expert will have comments and if quality is good chances are that these comments will be useless. Next time, <a href="http://www.codinghorror.com/blog/2012/07/new-programming-jargon.html">I’ll put some ducks here and there</a>. Needless to say, if the customer is clueless about the technology, he will take the side of the expert. Which is perfectly understandable, because for that particular manager, not following the expert’s advice can only result in a lot of pain if something happens, even if completely unrelated to the expert’s comments. Another example of <a href="http://en.wikipedia.org/wiki/Cover_your_ass">C.Y.A</a>.</p>
+<p>My third conclusion what that I probably was expecting too much from these experts. To me, the word “expert” means people like those on <a href="http://stackoverflow.com/users?tab=reputation&amp;filter=all">the top reputation page of StackOverflow</a>.</p>

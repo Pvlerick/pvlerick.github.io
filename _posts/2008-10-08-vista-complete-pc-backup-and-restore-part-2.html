@@ -1,0 +1,42 @@
+---
+layout: post
+title: Vista Complete PC Backup and Restore, Part 2
+date: 2008-10-08 19:05:01.000000000 +02:00
+categories: []
+tags:
+- Acronis
+- Backup
+- Restore
+- Vista
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>A few weeks ago, I posted <a href="http://www.pvle.be/2008/09/vista-complete-pc-backup-and-restore/">about my experience</a> of using <a href="http://www.microsoft.com/windows/windows-vista/features/backup.aspx">Vista Complete PC Backup and Restore</a> feature. I struggled a bit to use it, but I finally managed to do what I wanted to do.</p>
+<p>Quick reminder: I had a WD Raptor 74 Gb hard drive that was not working properly. The system was installed on that drive, so I had to copy it to as second drive (a WD 320 Gb disk), in order to send the Raptor back to WD support.</p>
+<p>Two weeks ago, I received a package from Western Digital. Very nice surprise, the package contained a brand new WD Raptor <strong>160 Gb</strong> drive! Guys, you have a customer for life!</p>
+<p>Anyway, the next actions were obvious:</p>
+<ol>
+<li>Make a Complete PC Backup of the system partition onto one of the other partition of the 320 Gb drive;</li>
+<li>Restore that system on the brand new 160Gb Raptor drive.</li>
+</ol>
+<p>Sounded easy (too easy?), I was already seeing myself with my PC up and running in less that an hour.</p>
+<p>As you can guess, I was wrong, <em>very</em> wrong.</p>
+<p>When I tried to restore the system partition (40 Gb) on the Raptor, I had an error saying that the target drive was not big enough. <em>Not big enough?</em> I don't have the exact error message, but I was quite shocked.</p>
+<p>Some research quickly revealed that you cannot restore a backup made from a drive A onto a drive B if A &gt; B, even if the partition that you want to restore is smaller than drive B . You read correctly, drive size is the thing that matters, not partition size! So the Complete PC Restore tool was not able to restore my 40 Gb partition on a 160 Gb drive.</p>
+<p>So from there, there are two solutions I could think of:</p>
+<ul>
+<li>The hard way: restore the system in a virtual machine on a bigger drive, then resize the drive to make it smaller than the target drive, backup the system in the virtual machine, then finally restore it on the physical drive. I didn't try that one, but I'd like to, one of these days. I figure that they will be some hardware issues, though.</li>
+<li>The easy way: use a third party tool, like <a href="http://www.acronis.com">Acronis True Image</a>.</li>
+</ul>
+<p>After installing Acronis True Image free trial version (15 days), I could copy my system partition on the new drive, in a few minutes. I then rebooted and the system magically restarted on the new drive.</p>
+<p>So, there is still some work to be done on that Complete PC Backup and Restore tool...</p>

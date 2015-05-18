@@ -1,0 +1,70 @@
+---
+layout: post
+title: The Misunderstood var Keyword
+date: 2010-10-29 11:47:16.000000000 +02:00
+categories: []
+tags:
+- C#
+- C# 3.0
+- var
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>I find amazing how the <em>var</em> keyword introduced in C# 3.0 is misunderstood. </p>
+<p>The web is full of questions asking what are the performances implications of using <em>var</em>, of how <em>var</em> is not type safe and other completely false statements.</p>
+<p>Also, one a day, I had a discussion with colleagues that argued that if I was using <em>var</em>, I could also use <em>Object</em> as the type for all the variables and then cast everywhere.</p>
+<p>I don’t know why the var appears so misleading. I find it very simple, and have no issues using it a lot. Now, there are some readability discussion to using <em>var</em>, but that is purely subjective.</p>
+<h3>Everything Happens at Compile-Time</h3>
+<p>The very important concept that has to be understood is that with <em>var</em>, everything happens at compile time. You make the compiler work a little more when building your assembly, but the generated IL is <strong>exactly</strong> the same than if you explicitly use types.</p>
+<p>So, the performances are only at compile time, and frankly, who cares of the performances at compile time?</p>
+<p>Let’s go over this again.</p>
+<p>Look at this code and the generated IL:</p>
+<pre class="code"><span style="color: blue">static void </span>Main(<span style="color: blue">string</span>[] args)
+{
+    <span style="color: blue">String </span>s = <span style="color: #a31515">&quot;Hello&quot;</span>;
+}</pre>
+<pre class="code">.method private hidebysig static <a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://mscorlib:4.0.0.0:b77a5c561934e089/System.Void">void</a> <b><a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://Sandbox15:1.0.0.0/Sandbox15.Program/Main(String%5b%5d)">Main</a></b>(<a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://mscorlib:4.0.0.0:b77a5c561934e089/System.String">string</a>[] args) cil managed
+{
+    .entrypoint
+    .maxstack 1
+    .locals init (
+        [0] <a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://mscorlib:4.0.0.0:b77a5c561934e089/System.String">string</a> <b>s</b>)
+    L_0000: <a>nop</a> 
+    L_0001: <a>ldstr</a> &quot;Hello&quot;
+    L_0006: <a>stloc.0</a> 
+    L_0007: <a>ret</a> 
+}</pre>
+<p>Now the same code, using <em>var</em> instead of <em>String</em>:</p>
+<pre class="code"><span style="color: blue">static void </span>Main(<span style="color: blue">string</span>[] args)
+{
+    <span style="color: blue">var </span>s = <span style="color: #a31515">&quot;Hello&quot;</span>;
+}</pre>
+<pre class="code">.method private hidebysig static <a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://mscorlib:4.0.0.0:b77a5c561934e089/System.Void">void</a> <b><a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://Sandbox15:1.0.0.0/Sandbox15.Program/Main(String%5b%5d)">Main</a></b>(<a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://mscorlib:4.0.0.0:b77a5c561934e089/System.String">string</a>[] args) cil managed
+{
+    .entrypoint
+    .maxstack 1
+    .locals init (
+        [0] <a href="http://www.aisto.com/roeder/dotnet/Default.aspx?Target=code://mscorlib:4.0.0.0:b77a5c561934e089/System.String">string</a> <b>s</b>)
+    L_0000: <a>nop</a> 
+    L_0001: <a>ldstr</a> &quot;Hello&quot;
+    L_0006: <a>stloc.0</a> 
+    L_0007: <a>ret</a> 
+}</pre>
+<p>Exactly the same IL. <strong>Exactly</strong>.</p>
+<p>To quote <a href="http://msdn.microsoft.com/en-us/library/bb384061.aspx">MSDN</a>:</p>
+<blockquote>
+<p><em>It is important to understand that the var keyword does not mean &quot;variant&quot; and does not indicate that the variable is loosely typed, or late-bound. It just means that the compiler determines and assigns the most appropriate type.</em></p>
+</blockquote>
+<p>It cannot be more clear!</p>
+<p>So please, stop picking on the poor <em>var</em>. Go pick on <em><a href="http://msdn.microsoft.com/en-us/library/dd264741.aspx">dynamic</a></em>.</p>

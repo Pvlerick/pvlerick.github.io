@@ -1,0 +1,69 @@
+---
+layout: post
+title: Parameter Passing and Reference Types in C#
+date: 2010-10-18 15:49:50.000000000 +02:00
+categories: []
+tags:
+- C#
+- Parameter-Passing
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>A few days ago, I had a question at work on why “regular” objects could be modified when in a method, while strings couldn’t. That’s a good question that any C#/Java developer (and many other languages) will ask at some point.</p>
+<p>The issue there is the general misunderstanding about parameter passing in C#. My response to that is generally to say that “<em>In C#, all parameters are passed by value</em>”. Which is wrong if you include <em>ref</em> and <em>out</em> modifiers, but I won’t cover these in this post. I say it that way because it makes people think about it. Generally the first answer is “No because I can modify an object in a method!”.</p>
+<p>That’s when you realize that most of the people understand the logic, but have issues being precise on telling what is truly happening. It has to do with the fact that strings are <a href="http://msdn.microsoft.com/en-us/library/490f96s2.aspx">reference types</a> in .NET. Taken from MSDN:</p>
+<blockquote><p><em>Variables of reference types, referred to as objects, store references to the actual data.</em></p>
+</blockquote>
+<p>To get with my previous statement, the <strong>value of a reference variable</strong> is the <strong>reference</strong> to the actual data. Also, the actual data will be stored on the heap, but this is implementation details that we should not take into account.</p>
+<p>So, to sum it up, when you pass a variable of reference type to a method, you actually pass <strong>the reference itself</strong>, as a value, to the method.</p>
+<p>Here is very simple sample of code to illustrate all of that:</p>
+<pre class="code"><span style="color: blue">static void </span>Main()
+{
+    <span style="color: #2b91af">String </span>name = <span style="color: #a31515">&quot;Philippe&quot;</span>;
+
+    <span style="color: #2b91af">Console</span>.WriteLine(name);
+
+    Modify(name);
+
+    <span style="color: #2b91af">Console</span>.WriteLine(name);
+
+    <span style="color: #2b91af">Console</span>.ReadLine();
+}
+
+<span style="color: blue">static void </span>Modify(<span style="color: #2b91af">String </span>text)
+{
+    <span style="color: #2b91af">Console</span>.WriteLine(text);
+
+    text = <span style="color: #a31515">&quot;Hello&quot;</span>;
+
+    <span style="color: #2b91af">Console</span>.WriteLine(text);
+}</pre>
+<p>And here is the printout for this:</p>
+<blockquote>
+<p>Philippe<br />
+    <br />Philippe</p>
+<p>Hello</p>
+<p>Philippe</p>
+</blockquote>
+<p>Let’s examine the memory during the different phases.</p>
+<p>Here is the memory just before the call to <em>Modify</em>:</p>
+<p><a href="http://www.pvle.be/wp-content/2010/10/Memory1.png"><img style="background-image: none; border-bottom: 0px; border-left: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top: 0px; border-right: 0px; padding-top: 0px" title="Memory1" border="0" alt="Memory1" src="assets/Memory1_thumb.png" width="296" height="96" /></a></p>
+<p>Now, here is the memory when entering <em>Modify</em>:</p>
+<p><a href="http://www.pvle.be/wp-content/2010/10/Memory2.png"><img style="background-image: none; border-bottom: 0px; border-left: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top: 0px; border-right: 0px; padding-top: 0px" title="Memory2" border="0" alt="Memory2" src="assets/Memory2_thumb.png" width="296" height="134" /></a></p>
+<p>We can see that both <em>text</em> and <em>name</em> variables have the same value, namely the reference to a location in the heap that contains a string which content is “Philippe”.</p>
+<p>Now, with that picture in mind, it’s very easy to imagine what will happen when we change the value of <em>text</em>:</p>
+<p><a href="http://www.pvle.be/wp-content/2010/10/Memory3.png"><img style="background-image: none; border-bottom: 0px; border-left: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top: 0px; border-right: 0px; padding-top: 0px" title="Memory3" border="0" alt="Memory3" src="assets/Memory3_thumb.png" width="296" height="134" /></a></p>
+<p>As simple as that. We modified the value of <em>text</em>, assigning it the reference to a string containing “Hello” somewhere in the heap. But we didn’t modify the <em>name</em> variable nor it’s content.</p>
+<p>When we exit the <em>Modify</em> method, text variable gets out of scope and is eligible for garbage collection. The <em>name</em> variable was not modified in the process.</p>
+<p>Now, this confusion also arises because of the fact that string are <strong>immutable</strong>. Mutable object’s internal content can be modified if you have a reference to them, but this does not hold true for immutable reference objects as you don’t modify them, you create new.</p>
+<p>For a very good extensive tutorial on this topic, please see <a href="http://www.yoda.arachsys.com/csharp/parameters.html">Jon Skeet’s excellent article on the subject</a>. It’s probably much more clear that what I can explain.</p>

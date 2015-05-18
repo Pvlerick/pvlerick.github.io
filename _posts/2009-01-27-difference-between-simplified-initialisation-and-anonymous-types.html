@@ -1,0 +1,98 @@
+---
+layout: post
+title: Difference between Simplified Initialisation and Anonymous Types
+date: 2009-01-27 13:30:03.000000000 +01:00
+categories: []
+tags:
+- .NET
+- Anonymous Types
+- C#
+- Simplified Initializations
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>Here is a sample code that declares a <em>Person</em> class then uses <a href="http://msdn.microsoft.com/en-us/library/bb397680.aspx">Simplified Initializations</a> to set its public properties. This code also instantiates an <a href="http://msdn.microsoft.com/en-us/library/bb397696.aspx">Anonymous Type</a> that has two properties named exactly like the two properties of the <em>Person</em> class.</p>
+<pre class="code"><span style="color: blue">class </span><span style="color: #2b91af">Person
+</span>{
+    <span style="color: blue">public </span><span style="color: #2b91af">String </span>Name { <span style="color: blue">get</span>; <span style="color: blue">set</span>; }
+    <span style="color: blue">public int </span>Age { <span style="color: blue">get</span>; <span style="color: blue">set</span>; }
+}
+
+<span style="color: blue">class </span><span style="color: #2b91af">Program
+</span>{
+    <span style="color: blue">static void </span>Main(<span style="color: blue">string</span>[] args)
+    {
+        <span style="color: blue">var </span>p = <span style="color: blue">new </span><span style="color: #2b91af">Person</span> { Name = <span style="color: #a31515">&quot;Philippe&quot;</span>, Age = 27 };
+        <span style="color: blue">var </span>q = <span style="color: blue">new </span>{ Name = <span style="color: #a31515">&quot;Johndoe&quot;</span>, Age = 88 };
+
+        <span style="color: #2b91af">Console</span>.ReadLine();
+    }
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>Initializations of variables <em>p</em> and <em>q</em> looks quite similar. However, under the covers, it is very different.</p>
+<p>Let's look at the generated C# for this, using <a href="http://www.red-gate.com/products/reflector/">Reflector</a>:</p>
+<pre class="code"><span style="color: blue">private static void </span>Main(<span style="color: blue">string</span>[] args)
+{
+    <span style="color: #2b91af">Person </span>&lt;&gt;g__initLocal0 = <span style="color: blue">new </span><span style="color: #2b91af">Person</span>();
+    &lt;&gt;g__initLocal0.Name = <span style="color: #a31515">&quot;Philippe&quot;</span>;
+    &lt;&gt;g__initLocal0.Age = 0x1b;
+    <span style="color: #2b91af">Person </span>p = &lt;&gt;g__initLocal0;
+    <span style="color: blue">var </span>q = <span style="color: blue">new </span>{
+        Name = <span style="color: #a31515">&quot;Johndoe&quot;</span>,
+        Age = 0x58
+    };
+    <span style="color: #2b91af">Console</span>.ReadLine();
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a>So, what do we see there?</p>
+<p>First, <em>Person</em>'s constructor <a href="http://msdn.microsoft.com/en-us/library/bb397680.aspx">is invoked</a> (I guess they mean that you d'ont have to invoke it yourself), and that the compiler uses a temporary variable to store this new <em>Person</em> object. Then, the properties set in the simplified initialization are set on that temporary variable, and at last our variable is assigned the reference to the object that is now ready to be used. This is clearly done for atomicity reasons, as the object will not be available while in inconsistent state.</p>
+<p>Second, we see that for the anonymous type, it's pretty much the same as the original code. However, there is no trace of an intermediate variable used during initializations of the object's properties. Let's have a look at the code generated for that anonymous type: </p>
+<pre class="code">[<span style="color: #2b91af">CompilerGenerated</span>, <span style="color: #2b91af">DebuggerDisplay</span>(<span style="color: #a31515">@&quot;\{ Name = {Name}, Age = {Age} }&quot;</span>, 
+    Type=<span style="color: #a31515">&quot;&lt;Anonymous Type&gt;&quot;</span>)]
+<span style="color: blue">internal sealed class </span>&lt;&gt;f__AnonymousType0&lt;&lt;Name&gt;j__TPar, &lt;Age&gt;j__TPar&gt;
+{
+    <span style="color: green">// Fields
+    </span>[<span style="color: #2b91af">DebuggerBrowsable</span>(<span style="color: #2b91af">DebuggerBrowsableState</span>.Never)]
+    <span style="color: blue">private readonly </span>&lt;Age&gt;j__TPar &lt;Age&gt;i__Field;
+    [<span style="color: #2b91af">DebuggerBrowsable</span>(<span style="color: #2b91af">DebuggerBrowsableState</span>.Never)]
+    <span style="color: blue">private readonly </span>&lt;Name&gt;j__TPar &lt;Name&gt;i__Field;
+
+    <span style="color: green">// Methods
+    </span>[<span style="color: #2b91af">DebuggerHidden</span>]
+    <span style="color: blue">public </span>&lt;&gt;f__AnonymousType0(&lt;Name&gt;j__TPar Name, &lt;Age&gt;j__TPar Age);
+    [<span style="color: #2b91af">DebuggerHidden</span>]
+    <span style="color: blue">public override bool </span>Equals(<span style="color: blue">object </span>value);
+    [<span style="color: #2b91af">DebuggerHidden</span>]
+    <span style="color: blue">public override int </span>GetHashCode();
+    [<span style="color: #2b91af">DebuggerHidden</span>]
+    <span style="color: blue">public override string </span>ToString();
+
+    <span style="color: green">// Properties
+    </span><span style="color: blue">public </span>&lt;Age&gt;j__TPar Age { <span style="color: blue">get</span>; }
+    <span style="color: blue">public </span>&lt;Name&gt;j__TPar Name { <span style="color: blue">get</span>; }
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>Now, two things to note:</p>
+<ol>
+<li>There is no default constructor for that anonymous type, there is only a constructor that takes the values of the two properties. </li>
+<li>The two properties are declared as <em>readonly</em>, so they cannot be assigned once the object has be instantiated. In fact, Anonymous Types are <a href="http://weblogs.asp.net/bleroy/archive/2008/01/16/immutability-in-c.aspx">immutable</a>. </li>
+</ol>
+<p>So, it is quite clear from the generated code that when instantiating an anonymous type, the compiler translates this into a call to the anonymous type's constructor. It is not shown in Reflector's C# disassembler, but it can be seen using Reflector's IL disassembler:</p>
+<pre class="code">L_001e: ldstr <span style="color: #a31515">&quot;Johndoe&quot;
+</span>L_0023: ldc.i4.s 0x58
+L_0025: newobj instance <span style="color: blue">void </span>&lt;&gt;f__AnonymousType0`2&lt;<span style="color: blue">string</span>, int32&gt;::.ctor(!0, !1)</pre>
+<p>As expected, the call will be to the constructor of the anonymous type.</p>
+<p>To sum it up, even if the following two lines look very similar, the reverse call will be very different:</p>
+<pre class="code"><span style="color: blue">var </span>p = <span style="color: blue">new </span><span style="color: #2b91af">Person </span>{ Name = <span style="color: #a31515">&quot;Philippe&quot;</span>, Age = 27 };
+<span style="color: blue">var </span>q = <span style="color: blue">new </span>{ Name = <span style="color: #a31515">&quot;Johndoe&quot;</span>, Age = 88 };</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>For variable <em>p</em>, the specified constructor will be called (in this case, the default one), then properties will be set on the newly created object. For variable <em>q</em>, the generated constructor will be called using properties given as parameters.</p>

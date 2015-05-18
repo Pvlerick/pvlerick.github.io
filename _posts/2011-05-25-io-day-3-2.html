@@ -1,0 +1,228 @@
+---
+layout: post
+title: Io, Day 3
+date: 2011-05-25 21:50:00.000000000 +02:00
+categories: []
+tags:
+- Io
+- Seven Languages in Seven Weeks
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+  _wp_old_slug: io-day-two
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>Let’s get down to some coding.</p>
+<h5>Write a method to find the nth <a href="http://en.wikipedia.org/wiki/Fibonacci_number">Fibonacci</a> number, both iteratively and recursively</h5>
+<pre lang="IO">Fibonacci := Object clone
+
+Fibonacci iter := method(n, 
+  l := list(1, 1)
+  for(i, 2, n, 1, 
+    l append(l at(i - 2) + l at(i - 1))
+  )
+  l at(n - 1)
+)
+
+Fibonacci rec := method(n,
+  if(n &lt; 3, 1, 
+    rec(n - 1) + rec(n - 2)
+  )
+)
+
+x := Fibonacci iter(12)
+x println
+
+y := Fibonacci rec(12)
+y println</pre>
+<h5>How would you change the operator / to return 0 is the denominator is zero</h5>
+<p>For this one, I was a bit stuck with only the book and the language reference, so I had to <a href="http://www.google.be/search?q=io+language+recursive+method">Google</a> it. And that’s where you have all the beauty and annoyance of the internet: one of the first hit is a solution to that exact question on <a href="http://stackoverflow.com/questions/4262196/how-do-you-replace-existing-operators-without-invoking-them-in-io">StackOverflow</a> (it was to be expected.) I was expecting this exercise to take me to the <em>OperatorTable</em> for which there is an example in the book, but actually the operator already exists so it does not have to be added, but instead re-defined for the Number type.</p>
+<h5>Write a program to add up all the numbers in a two-dimensional array</h5>
+<pre lang="IO">a := list(list(1, 2, 3))
+a append(list(4, 5, 6, 7, 8, 9))
+a append(list(10, 11, 12))
+a append(list(13, 14, 15, 16, 17, 18, 19, 20))
+
+total := 0
+
+for(i, 0, a size - 1,
+  b := a at(i)
+  for(j, 0, b size - 1,
+    n := b at(j)
+    total = (total + n)
+  )
+)
+
+total println</pre>
+<h5>Add an <em>myAverage</em> slot to a list that computes the average of all the numbers&nbsp; in a list. What happens if there are no numbers in a list? Bonus: raise an exception if any item in the list is not a <em>Number</em>.</h5>
+<pre lang="IO">a := list(1, 2, 3, 4, 5)
+b := list(1, "hello")
+
+List myAverage := method(
+  total := 0
+  for(i, 0, self size -1,
+    n := self at(i)
+    if (n type != "Number",
+      Exception raise("An item in the list is not a Number"),
+      total = total + n
+    )
+  )
+  total / self size
+)
+
+a myAverage println
+b myAverage println</pre>
+<h5>Write a prototype for a two-dimensional list. The <em>dim(x, y)</em> method should allocate a list of y lists that are x elements long. The <em>set(x, y, value)</em> method should set a value and the <em>get(x, y)</em> method should return that value.</h5>
+<pre lang="IO">Matrix := Object clone
+
+Matrix list := nil
+
+Matrix dim := method(x, y,
+  self list := List clone
+  for(i, 0, x - 1,
+    l := List clone
+    for(j, 0, y - 1, l append(nil))
+    self list append(l)
+  )
+)
+
+Matrix set := method(x, y, value,
+  self list at(x) atPut(y, value)
+)
+
+Matrix get := method(x, y,
+  self list at(x) at(y)
+)
+
+matrix := Matrix clone
+matrix dim(4, 2)
+
+matrix set(3, 1, "Hello")
+matrix set(1, 1, "World")
+
+matrix get(3, 1) println
+matrix get(1, 1) println
+</pre>
+<h5>Bonnus: write a transpose method so that new_matrix get(y, x) == matrix get(x, y) on the original list</h5>
+<pre lang="IO">Matrix transpose := method(
+  x := self list at(0) size
+  y := self list size
+  m := Matrix clone
+  m dim(x, y)
+  for(i, 0, x - 1,
+    for(j, 0, y - 1,
+      m set(i, j, self get(j, i))
+    )
+  )
+  m
+)
+
+new_matrix := matrix transpose
+
+(matrix get(3, 1) == new_matrix get(1, 3)) println
+</pre>
+<h5>Write the matrix to a file, read the matrix from a file.</h5>
+<pre code="IO"></pre>
+<p>For this one, decided to aggressively look in the List API to make the code simpler. I discovered quite a lot of useful functions! I also implemented the <em>asString</em> method so that it is easier to debug (the <em>println</em> method on the Object type is implemented to print the result of <em>asString</em>.)</p>
+<p>Here is the full code for the whole Matrix object, improved as much as I could:</p>
+<pre lang="IO">Matrix := Object clone
+
+Matrix list := nil
+
+Matrix dim := method(x, y,
+  self list := List clone setSize(x)
+  for(i, 0, x - 1,
+    self list atPut(i, List clone setSize(y))
+  )
+)
+
+Matrix set := method(x, y, value,
+  self list at(x) atPut(y, value)
+)
+
+Matrix get := method(x, y,
+  self list at(x) at(y)
+)
+
+Matrix transpose := method(
+  x := self list at(0) size
+  y := self list size
+  m := Matrix clone
+  m dim(x, y)
+  for(i, 0, x - 1,
+    for(j, 0, y - 1,
+      m set(i, j, self get(j, i))
+    )
+  )
+  return m
+)
+
+Matrix asString := method(
+  s := ""
+  self list foreach(e,
+    s := s asMutable appendSeq(e join(",")) asMutable appendSeq("\n")
+  )
+)
+
+Matrix saveTo := method(file,
+  f := File with(file) remove openForUpdating
+  self list foreach(i, e,
+    f write(e join(",")) write("\n")
+  )
+  f close
+)
+
+Matrix loadFrom := method(file,
+  l := List clone
+  f := File with(file) openForReading
+  f readLines foreach(e,
+    l append(e splitNoEmpties(","))
+  )
+  f close
+  m := Matrix clone
+  m dim(l size, l at(0) size)
+  l foreach(i, e,
+    e foreach(j, f,
+      m set(i, j, f)
+    )
+  )
+  m
+)
+
+/* Tests */
+matrix saveTo("matrix.txt")
+new_matrix saveTo("new_matrix.txt")
+
+matrix := Matrix loadFrom("matrix.txt")
+new_matrix := Matrix loadFrom("new_matrix.txt")
+
+matrix println
+new_matrix println
+</pre>
+<h5>Write a program that gives you 10 tries to guess a random number from 1 to 100. Give hints of “Hotter” or “Colder” if you like.</h5>
+<pre lang="IO">//Not really random, but will suffice for now
+n := Date now second * 1000 % 100
+
+input := File standardInput();
+
+for(i, 1, 10,
+  guess := input readLine asNumber
+  
+  if (guess &lt; n, "Hotter" println)
+  if (guess &gt; n, "Colder" println)
+  if (guess == n,
+    "Well done!" println
+    break
+  )  
+)
+</pre>
+<p>I really enjoyed myself with these! Looking forward to Day 3...</p>

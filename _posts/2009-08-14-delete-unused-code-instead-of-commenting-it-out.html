@@ -1,0 +1,32 @@
+---
+layout: post
+title: Delete Unused Code Instead of Commenting It Out
+date: 2009-08-14 16:28:08.000000000 +02:00
+categories: []
+tags:
+- Best Practices
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>While reading <a href="http://www.manning.com/osherove/">The Art Of Unit Testing</a>, I was stuck on a particular sentence:</p>
+<blockquote><p>You should then remove (not comment out) the invalid requirement and its tests.</p>
+</blockquote>
+<p>This made me think about something that happen very often: when modifying code, we are tempted to comment out some of the code that is not used anymore.</p>
+<p>I suppose that we do that for two reasons:</p>
+<ol>
+<li>If we need to get something from that old code, it is easy to get it back as it is still there.</li>
+<li><em>Deleting</em> code is a very hard psychological action for a developer. In <a href="http://www.amazon.com/Code-Complete-Practical-Handbook-Construction/dp/0735619670/ref=sr_1_1?ie=UTF8&amp;qid=1250259069&amp;sr=8-1">Code Complete</a> (well, I think it’s in there, I don’t have a copy here to confirm), Steve says that for a developer, throwing away code that he wrote is very difficult.</li>
+</ol>
+<p>However, remember that as your source code is under <a href="http://en.wikipedia.org/wiki/Revision_control">version control</a> (it is, right? If not, <a href="http://www.joelonsoftware.com/articles/fog0000000043.html">read this</a> and <a href="http://www.ericsink.com/scm/source_control.html">this</a>), so you should not worry about deleting stuff. If you accidentally delete something that you later want to get back, use undo or have a look at the previous version of the file. If some code is not used anymore, just get rid of it.</p>
+<p>Comments should be there to help the next developer to understand the code. If you comment out a line of code but leave it because it makes the code more clear, that’s fine. Commenting a whole method that is not used anymore doesn’t help to understand the code, so it should be deleted.</p>

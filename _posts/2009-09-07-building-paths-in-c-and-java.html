@@ -1,0 +1,47 @@
+---
+layout: post
+title: Building Paths in C# and Java
+date: 2009-09-07 20:16:22.000000000 +02:00
+categories: []
+tags:
+- .NET
+- Java
+- Path
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>When it comes to build full path files strings in C# or Java, I very often see methods being reinvented again and again.</p>
+<p>However, both framework offer utility classes to do just that for you. An it has been developed by some of the most skilled developers on the planet. How can you beat that? So stop rolling out your own path building functions!</p>
+<h3>.NET Version (in C#)</h3>
+<p>I’m always astonished that so many developers don’t know the <a href="http://msdn.microsoft.com/en-us/library/system.io.path.aspx">System.IO.Path</a> utility static class of the .NET Framework.</p>
+<p>As an example, see this code:</p>
+<pre class="code"><span style="color: #2b91af">String </span>file1 = <span style="color: #2b91af">Path</span>.Combine(<span style="color: #a31515">@&quot;C:\tmp\test<pre wp-pre-tag-0></pre>quot;</span>, <span style="color: #a31515">&quot;test.txt&quot;</span>);
+<span style="color: #2b91af">String </span>file2 = <span style="color: #2b91af">Path</span>.Combine(<span style="color: #a31515">@&quot;C:\tmp\test&quot;</span>, <span style="color: #a31515">&quot;test.txt&quot;</span>);
+        
+<span style="color: green">//file1 == file2
+
+//&quot;C:\tmp\test\test.txt&quot;
+</span><span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;File: {0}&quot;</span>, file1); </pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>Doesn’t matter if you forgot the “\” at the end of the directory string, it will be added. If it’s already there, it’s also fine! If you don’t know that stuff yet, have a look at the others methods available.</p>
+<p>Now, onto Java.</p>
+<h3>Java Version</h3>
+<p>Java has the <a href="http://java.sun.com/javase/6/docs/api/java/io/File.html">File</a> class to do that. It’s very easy to use, but it doesn’t work the same way. You have to instantiate a new File object every time, instead of calling a static method like in .NET.</p>
+<pre class="code">File file1 = <span style="color: #7f0055">new </span>File(<span style="color: #2a00ff">&quot;C:\tmp\test&quot;</span>, <span style="color: #2a00ff">&quot;test.txt&quot;</span>);
+File file2 = <span style="color: #7f0055">new </span>File(<span style="color: #2a00ff">&quot;C:\tmp\test\&quot;</span>, <span style="color: #2a00ff">&quot;test.txt&quot;</span>);</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>Now, this object is an abstract representation of the “C:\tmp\test\test.txt” file, so if you call toString() on it, you get that path as a string.</p>
+<h3>Side Notes</h3>
+<p>Two interesting things I noticed while writing this.</p>
+<p>First, a difference between .NET and Java path creators. The .NET <em>Path.Combine</em> will return only the second string if it starts with the “\” character, while the Java <em>File</em> class will ignore it. the .NET class probably assumes that it’s a relative path, while the Java class ignores it.</p>
+<p>Second, if you try to create an instance of the .NET <em>Path</em> class, Visual Studio will give you the following error message: “Cannot create an instance of the abstract class or interface 'System.IO.Path'”. Once you tried to build, if fails and the error message changes to “Cannot create an instance of the static class 'System.IO.Path'”. It’s clearly related to Visual Studio, but it’s the first time I notice that behavior (the first error message was quite suspicious with the “abstract class or interface” thingy). Anyway, Visual Studio warns you that it cannot be done, which is the important thing, then it refines it’s error message based on the output of the compiler.</p>

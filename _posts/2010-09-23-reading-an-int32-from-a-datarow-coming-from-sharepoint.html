@@ -1,0 +1,48 @@
+---
+layout: post
+title: Reading an Int32 from a DataRow coming from SharePoint
+date: 2010-09-23 15:55:45.000000000 +02:00
+categories: []
+tags:
+- DataRow
+- DataTable
+- Extension Methods
+- SharePoint
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>In my <a href="http://www.pvle.be/2010/09/convert-toint32string-with-an-empty-string/">previous post</a>, I described how to convert a String to an Int32 making sure that Convert.ToInt32 works all the time for positive integers.</p>
+<p>Now, there is still an issue with that method: when the integer is negative. In that case, adding a 0 in front of it does not work and makes the conversion throw a FormatException, as the underlying parse chokes on the “0-”.</p>
+<p>Now, the obvious ultimate solution to that problem is simply to write an extension method for DataRow to try to parse the value as an Int32:</p>
+<pre class="code"><span style="color: blue">internal static int </span>FieldAsInt32(<span style="color: blue">this </span><span style="color: #2b91af">DataRow </span>dataRow, <span style="color: #2b91af">String </span>columnName, <span style="color: blue">int </span>defaultValue)
+{
+    <span style="color: blue">var </span>fieldValue = dataRow.Field&lt;<span style="color: #2b91af">String</span>&gt;(columnName);
+
+    <span style="color: blue">int </span>value;
+
+    <span style="color: blue">if </span>(<span style="color: #2b91af">Int32</span>.TryParse(fieldValue, <span style="color: blue">out </span>value))
+    {
+        <span style="color: blue">return </span>value;
+    }
+    <span style="color: blue">else
+    </span>{
+        <span style="color: blue">return </span>defaultValue;
+    }
+
+}
+
+<span style="color: blue">internal static int </span>FieldAsInt32(<span style="color: blue">this </span><span style="color: #2b91af">DataRow </span>dataRow, <span style="color: #2b91af">String </span>columnName)
+{
+    <span style="color: blue">return </span>dataRow.FieldAsInt32(columnName, 0);
+}</pre>
+<p>I added an overload that takes the default value, i.e. the value that is to be returned if the parse fails. The default for that is 0. This might not be useful in all cases, but in our case this field is used to order elements, so if it can be parsed, it has to return a very high value to make sure it is the latest in the ordered sequence.</p>

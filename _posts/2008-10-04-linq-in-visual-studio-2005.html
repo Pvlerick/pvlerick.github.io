@@ -1,0 +1,214 @@
+---
+layout: post
+title: LINQ in Visual Studio 2005
+date: 2008-10-04 19:50:31.000000000 +02:00
+categories: []
+tags:
+- .NET 3.5
+- LINQ
+- Visual Studio 2005
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>A few months ago, we wanted to query an XML log file on our project. On that particular project, we can use .NET 3.5 features, while we have to stick to Visual Studio 2005.</p>
+<p>For this task, LINQ seemed like a natural choice, provided that we could use it inside Visual Studio 2005 which doesn't natively support the sexy LINQ query syntax.</p>
+<p>At first, we thought that it was not possible to use LINQ in Visual Studio 2005, but after some research it turned out that we were wrong. I found some clues on how to achieve that in one of the comments on <a href="http://geekswithblogs.net/cyoung/archive/2007/12/01/117279.aspx#358944">this post comment by Charles Young</a>.</p>
+<p>The LINQ libraries are located in the <em>System.Core</em> assembly, so it is required to reference it in the project. Then, each file that will use LINQ will have to include the <em>System.Linq</em> using statement.</p>
+<h3>A simple LINQ query</h3>
+<p>Let's take a standard LINQ query on a String array</p>
+<pre class="code"><span style="color: #2b91af">String</span>[] persons = <span style="color: blue">new </span><span style="color: #2b91af">String</span>[] { <span style="color: #a31515">&quot;Philippe&quot;</span>, <span style="color: #a31515">&quot;Steve&quot;</span>, <span style="color: #a31515">&quot;Bill&quot; </span>};
+
+<span style="color: blue">var </span>search = <span style="color: blue">from </span>p <span style="color: blue">in </span>persons
+             <span style="color: blue">where </span>p.Contains(<span style="color: #a31515">&quot;l&quot;</span>)
+             <span style="color: blue">select </span>p.ToUpper();</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>This is a fairly simple query, involving only <em>filtering</em> (where clause) an <em>projection</em> (select with transformation of the output). This native query will be translated by the compiler multiple times, we just have to follow the pipeline until we find something that Visual Studio 2005 understands.</p>
+<p>The first translation results in a statement that uses Extensions methods on the array:</p>
+<pre class="code"><span style="color: blue">var </span>search = persons
+    .Where(p =&gt; p.Contains(<span style="color: #a31515">&quot;l&quot;</span>))
+    .Select(p =&gt; p.ToUpper());</pre>
+<p>These extension methods are from <em>Enumerable</em> class. However, Extension methods are not natively supported in Visual Studio 2005.</p>
+<p>The reverse call of the previous statement will be a use some of <em>Enumerable</em>'s static methods (as these are Extension methods, the reverse call will actually call a static method and give the object that you think it has been called on as parameter). In this particular example, it will be translated in:</p>
+<pre class="code"><span style="color: blue">var </span>search = <span style="color: #2b91af">Enumerable</span>.Select(
+    <span style="color: #2b91af">Enumerable</span>.Where(persons, p =&gt; p.Contains(<span style="color: #a31515">&quot;l&quot;</span>)),
+    p =&gt; p.ToUpper());</pre>
+<p>Please note that this translation results in using <em>Enumerable</em> because for this particular case we are using LINQ to Objects. I suppose that using LINQ to SQL would result in using <em>Queryable</em> static methods, but I didn't try yet.</p>
+<p>Also note that there is a call to <em>Enumerable.Select</em> because our initial query involves <em>projection</em>, in a sense that the result of the query (here a <em>String</em> object) is different from the input (here a <em>String</em> object that is a transformation of the input). If the projection statement of the initial query was &quot;select p&quot; (no transformation of the output), there would be no call to <em>Enumerable.Select</em>. More on this below.</p>
+<p>Still, this statement is not supported in Visual Studio 2005 because of the <a href="http://msdn.microsoft.com/en-us/library/bb397687.aspx">lambda expressions</a> that are not supported.</p>
+<p>The next step for the compiler is to translate these lambda expressions into anonymous delegates:</p>
+<pre class="code"><span style="color: blue">var </span>search = <span style="color: #2b91af">Enumerable</span>.Select(
+    <span style="color: #2b91af">Enumerable</span>.Where(
+        persons,
+        <span style="color: blue">delegate</span>(<span style="color: #2b91af">String </span>p)
+        {
+            <span style="color: blue">return </span>p.Contains(<span style="color: #a31515">&quot;l&quot;</span>);
+        }),
+    <span style="color: blue">delegate</span>(<span style="color: #2b91af">String </span>p)
+    {
+        <span style="color: blue">return </span>p.ToUpper();
+    });</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>Even if this looks like something we could use in Visual Studio 2005, it is not. Visual Studio 2005 will complain because it is unable to infer types (and because of the var keyword that is also part of C# 3.0 hence not supported in Visual Studio 2005). </p>
+<p>We have to specify types explicitly for the <em>Enumerable</em> methods:</p>
+<pre class="code"><span style="color: #2b91af">IEnumerable</span>&lt;<span style="color: #2b91af">String</span>&gt; search = <span style="color: #2b91af">Enumerable</span>.Select&lt;<span style="color: #2b91af">String</span>, <span style="color: #2b91af">String</span>&gt;(
+    <span style="color: #2b91af">Enumerable</span>.Where&lt;<span style="color: #2b91af">String</span>&gt;(
+        persons,
+        <span style="color: blue">delegate</span>(<span style="color: #2b91af">String </span>p)
+        {
+            <span style="color: blue">return </span>p.Contains(<span style="color: #a31515">&quot;l&quot;</span>);
+        }),
+    <span style="color: blue">delegate</span>(<span style="color: #2b91af">String </span>p)
+    {
+        <span style="color: blue">return </span>p.ToUpper();
+    });</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>There we are, a LINQ query that can be used inside Visual Studio 2005! It's a bit confusing to write at first, but you'll get use to it.</p>
+<p>Now that we have seen a simple query, let's have a look at the other query statements.</p>
+<h3>Ordering</h3>
+<p>Always using the same String array, here is the C# 3.0 style LINQ query</p>
+<pre class="code"><span style="color: blue">var </span>search = <span style="color: blue">from </span>p <span style="color: blue">in </span>persons
+             <span style="color: blue">orderby </span>p
+             <span style="color: blue">select </span>p;</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>that translates in</p>
+<pre class="code"><span style="color: #2b91af">IEnumerable</span>&lt;<span style="color: #2b91af">String</span>&gt; search = <span style="color: #2b91af">Enumerable</span>.OrderBy&lt;<span style="color: #2b91af">String</span>, <span style="color: #2b91af">String</span>&gt;(
+        persons,
+        <span style="color: blue">delegate</span>(<span style="color: #2b91af">String </span>p)
+        {
+            <span style="color: blue">return </span>p;
+        });</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>As you can see, no need for <em>Enumerable.Select</em> call as the projection returns the same object.</p>
+<p>If you want to order descending, use the <em>Enumerable.OrderByDescending</em> method instead. It is also possible to specify the <em>IComparer</em> that is to be used by the <em>OrderBy</em>/<em>OrderByDescending</em> method, thus allowing you to use ordering on custom object.</p>
+<h3>Joining</h3>
+<p>For joining, we need to define some struct in order do have two distinct list of elements.</p>
+<p>So, here is a simple struct:</p>
+<pre class="code"><span style="color: blue">struct </span><span style="color: #2b91af">Name
+</span>{
+    <span style="color: blue">public int </span>Id;
+    <span style="color: blue">public </span><span style="color: #2b91af">String </span>Value;
+
+    <span style="color: blue">public </span>Name(<span style="color: blue">int </span>Id, <span style="color: #2b91af">String </span>Value)
+    {
+        <span style="color: blue">this</span>.Id = Id;
+        <span style="color: blue">this</span>.Value = Value;
+    }
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>And here are two array declarations:</p>
+<pre class="code"><span style="color: #2b91af">Name</span>[] firstNames = <span style="color: blue">new </span><span style="color: #2b91af">Name</span>[] {
+    <span style="color: blue">new </span><span style="color: #2b91af">Name</span>(1, <span style="color: #a31515">&quot;Philippe&quot;</span>),
+    <span style="color: blue">new </span><span style="color: #2b91af">Name</span>(2, <span style="color: #a31515">&quot;Steve&quot;</span>),
+    <span style="color: blue">new </span><span style="color: #2b91af">Name</span>(3, <span style="color: #a31515">&quot;Bill&quot;</span>)
+};
+
+<span style="color: #2b91af">Name</span>[] lastNames = <span style="color: blue">new </span><span style="color: #2b91af">Name</span>[] {
+    <span style="color: blue">new </span><span style="color: #2b91af">Name</span>(1, <span style="color: #a31515">&quot;Vl&#233;rick&quot;</span>),
+    <span style="color: blue">new </span><span style="color: #2b91af">Name</span>(2, <span style="color: #a31515">&quot;Balmer&quot;</span>),
+    <span style="color: blue">new </span><span style="color: #2b91af">Name</span>(3, <span style="color: #a31515">&quot;Gates&quot;</span>)
+};</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>Using two arrays, we will be joining on the <em>Id</em> field of the <em>Name</em> struct.</p>
+<p>The C# 3.0 query:</p>
+<pre class="code"><span style="color: blue">var </span>search = <span style="color: blue">from </span>fn <span style="color: blue">in </span>firstNames
+             <span style="color: blue">join </span>ln <span style="color: blue">in </span>lastNames <span style="color: blue">on </span>fn.Id <span style="color: blue">equals </span>ln.Id
+             <span style="color: blue">select </span>fn.Value + <span style="color: #a31515">&quot; &quot; </span>+ ln.Value;</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>Here is the translation:</p>
+<pre class="code"><span style="color: #2b91af">IEnumerable</span>&lt;<span style="color: #2b91af">String</span>&gt; search = <span style="color: #2b91af">Enumerable</span>.Join&lt;<span style="color: #2b91af">Name</span>, <span style="color: #2b91af">Name</span>, <span style="color: blue">int</span>, <span style="color: #2b91af">String</span>&gt;(
+    firstNames,
+    lastNames,
+    <span style="color: blue">delegate</span>(<span style="color: #2b91af">Name </span>n)
+    {
+        <span style="color: blue">return </span>n.Id;
+    },
+    <span style="color: blue">delegate</span>(<span style="color: #2b91af">Name </span>n)
+    {
+        <span style="color: blue">return </span>n.Id;
+    },
+    <span style="color: blue">delegate</span>(<span style="color: #2b91af">Name </span>n1, <span style="color: #2b91af">Name </span>n2)
+    {
+        <span style="color: blue">return </span>n1.Value + <span style="color: #a31515">&quot; &quot; </span>+ n2.Value;
+    });</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>This one is a bit tricky and need some clarification.</p>
+<p>The first two types given are the type of object that each collection contains. The third type is the type that the actual join will be made on and has to be the same on both collections. The last type is the type of the objects that will be stored in the returned collection. So, in this particular case, the first collection will contain <em>Name</em> objects, the second collection will contain <em>Name</em> objects as well, the join will be made on <em>int</em> types and the returning collection will contain <em>String</em> objects.</p>
+<p>As parameters, the first two are collections that contain the object to use for the join. The next two parameters are the delegates that must return the type the join has to be made on (in this case, <em>int</em>). The first delegate will be used with each object of the first collection (in this case, <em>firstNames</em>) and the second delegate will be used with each object of the second collection (<em>lastNames</em>). The last parameter is a delegate that must return the given return type (here a <em>String</em> object) receiving the two joined objects as parameters).</p>
+<p>Note that we don't need to explicitly call the projection method (<em>Enumerable.Select</em>) as there is a selector delegate that builds the output object.</p>
+<h3>Grouping</h3>
+<p>As a reminder, grouping means splitting the output in sequences of groups that have the same key value. The output of this type of query is a bit different from the previous queries.</p>
+<p>A custom <em>struct</em> is needed to have an example object that we can test grouping on:</p>
+<pre class="code"><span style="color: blue">struct </span><span style="color: #2b91af">Student
+</span>{
+    <span style="color: blue">public </span><span style="color: #2b91af">String </span>Name;
+    <span style="color: blue">public </span><span style="color: #2b91af">String </span>Course;
+
+    <span style="color: blue">public </span>Student(<span style="color: #2b91af">String </span>Name, <span style="color: #2b91af">String </span>Course)
+    {
+        <span style="color: blue">this</span>.Course = Course;
+        <span style="color: blue">this</span>.Name = Name;
+    }
+}</pre>
+<p>We can then declare an array that we will query on</p>
+<pre class="code"><span style="color: #2b91af">Student</span>[] students = <span style="color: blue">new </span><span style="color: #2b91af">Student</span>[] {
+    <span style="color: blue">new </span><span style="color: #2b91af">Student</span>(<span style="color: #a31515">&quot;Philippe&quot;</span>, <span style="color: #a31515">&quot;Data Structure&quot;</span>),
+    <span style="color: blue">new </span><span style="color: #2b91af">Student</span>(<span style="color: #a31515">&quot;Bill&quot;</span>, <span style="color: #a31515">&quot;Marketing&quot;</span>),
+    <span style="color: blue">new </span><span style="color: #2b91af">Student</span>(<span style="color: #a31515">&quot;Steve&quot;</span>, <span style="color: #a31515">&quot;Finance&quot;</span>),
+    <span style="color: blue">new </span><span style="color: #2b91af">Student</span>(<span style="color: #a31515">&quot;Bill&quot;</span>, <span style="color: #a31515">&quot;Data Structure&quot;</span>),
+    <span style="color: blue">new </span><span style="color: #2b91af">Student</span>(<span style="color: #a31515">&quot;Steve&quot;</span>, <span style="color: #a31515">&quot;Dance&quot;</span>),
+    <span style="color: blue">new </span><span style="color: #2b91af">Student</span>(<span style="color: #a31515">&quot;Bill&quot;</span>, <span style="color: #a31515">&quot;Finance&quot;</span>)
+};</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>Lets group on <em>Course</em> field of the <em>struct</em>. Here is the C# 3.0 query:</p>
+<pre class="code"><span style="color: blue">var </span>search = <span style="color: blue">from </span>s <span style="color: blue">in </span>students
+             <span style="color: blue">group </span>s <span style="color: blue">by </span>s.Course;</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>As you can see, there is no <em>projection</em>. The output is a <em>IEnumerable</em> of <em><a href="http://msdn.microsoft.com/en-us/library/bb344977.aspx">IGrouping</a></em> objects. An <em>IGrouping</em> object is a collection of objects that share a common key, in here <em>Student</em> objects with <em>String</em> as keys.</p>
+<p>To iterate trough this, we need two <em>foreach</em> loops. the first one will iterate trough each IGrouping object, and the second one will iterate trough each Student.</p>
+<pre class="code"><span style="color: blue">foreach </span>(<span style="color: blue">var </span>course <span style="color: blue">in </span>search)
+{
+    <span style="color: #2b91af">Console</span>.WriteLine(course.Key);
+    <span style="color: blue">foreach </span>(<span style="color: blue">var </span>student <span style="color: blue">in </span>course)
+    {
+        <span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;- &quot; </span>+ student.Name);
+    }
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a>This is how this query translates in Visual Studio 2005:</p>
+<pre class="code"><span style="color: #2b91af">IEnumerable</span>&lt;<span style="color: #2b91af">IGrouping</span>&lt;<span style="color: #2b91af">String</span>, <span style="color: #2b91af">Student</span>&gt;&gt; search = <span style="color: #2b91af">Enumerable</span>.GroupBy&lt;<span style="color: #2b91af">Student</span>, <span style="color: #2b91af">String</span>&gt;(
+    students,
+    <span style="color: blue">delegate</span>(<span style="color: #2b91af">Student </span>s)
+    {
+        <span style="color: blue">return </span>s.Course;
+    });</pre>
+<p><a href="http://11011.net/software/vspaste"></a>And the loops to display the content:</p>
+<pre class="code"><span style="color: blue">foreach </span>(<span style="color: #2b91af">IGrouping</span>&lt;<span style="color: #2b91af">String</span>, <span style="color: #2b91af">Student</span>&gt; course <span style="color: blue">in </span>search)
+{
+    <span style="color: #2b91af">Console</span>.WriteLine(course.Key);
+    <span style="color: blue">foreach </span>(<span style="color: #2b91af">Student </span>student <span style="color: blue">in </span>course)
+    {
+        <span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;- &quot; </span>+ student.Name);
+    }
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a>Again, you have to specify types everywhere in Visual Studio 2005. </p>
+<h3>Other Thoughts</h3>
+<p>One of the other painful things with Visual Studio 2005 is that there are no anonymous types which are very handy to use with LINQ. It is required to write all the used types as Classes (or better, Structs).</p>
+<h3>Conclusion</h3>
+<p>Using static methods from Enumerable (and possibly Queryable), it is possible to use LINQ queries inside Visual Studio 2005. However, queries are a bit more complicated to write.</p>
+<p>A good practice would be to comments the query intend extensively, as the query statement itself is hard to read.</p>
+<h3>Resources</h3>
+<p>Here are some of the resources I used to write this entry:</p>
+<ul>
+<li>Programming C# 3.0 - O'Reilly, January 2008 </li>
+<li>&quot;Linq To Anything&quot; - <a href="http://blogs.bartdesmet.net/bart">Bart De Smet</a>, March 2008 </li>
+<li>&quot;LINQ Under the Covers&quot; - Alex Turner, March 2008 </li>
+</ul>

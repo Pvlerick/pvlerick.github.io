@@ -1,0 +1,81 @@
+---
+layout: post
+title: Explicit Interface Implementation
+date: 2009-10-11 16:41:25.000000000 +02:00
+categories: []
+tags:
+- C#
+- C# 4.0
+- Interface
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>In C#, you can explicitly implement interface members in your class or struct. <a href="http://msdn.microsoft.com/en-us/library/aa645596(VS.71).aspx">C# language specification</a> explains it better than I can:</p>
+<blockquote><p><em>For purposes of implementing interfaces, a class or struct may declare explicit interface member implementations. An explicit interface member implementation is a method, property, event, or indexer declaration that references a fully qualified interface member name.</em></p>
+</blockquote>
+<p>Here’s a small example:</p>
+<pre class="code"><span style="color: blue">public interface </span><span style="color: #2b91af">IMyInterface
+</span>{
+    <span style="color: #2b91af">String </span>SayHello();
+}
+
+<span style="color: blue">class </span><span style="color: #2b91af">MyClass </span>: <span style="color: #2b91af">IMyInterface
+</span>{
+    <span style="color: blue">string </span><span style="color: #2b91af">IMyInterface</span>.SayHello()
+    {
+        <span style="color: blue">return </span><span style="color: #a31515">&quot;Hello from IMyInterface!&quot;</span>;
+    }
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a>The <em>MyClass</em> explicitly implement the <em>SayHello</em> method from <em>IMyInterface</em>. The interesting thing about explicitly implemented member is that they're only accessible when accessed trough the interface. From C# language specification again:</p>
+<blockquote>
+<p><em>It is not possible to access an explicit interface member implementation through its fully qualified name in a method invocation, property access, or indexer access. An explicit interface member implementation can only be accessed through an interface instance, and is in that case referenced simply by its member name.</em></p>
+</blockquote>
+<p>The below code won’t compile, as the <em>SayHello</em> method is only visible trough the interface:</p>
+<pre class="code"><span style="color: blue">var </span>o = <span style="color: blue">new </span><span style="color: #2b91af">MyClass</span>();
+
+<span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;MyClass: {0}&quot;</span>, o.SayHello());</pre>
+<p><a href="http://11011.net/software/vspaste"></a><a href="http://11011.net/software/vspaste"></a><a href="http://11011.net/software/vspaste"></a></p>
+<blockquote>
+<p><em>‘MyClass' does not contain a definition for 'SayHello' and no extension method 'SayHello' accepting a first argument of type 'MyClass' could be found (are you missing a using directive or an assembly reference?)</em></p>
+</blockquote>
+<p>Now, let’s add a second method called <em>SayHello</em> with the exact same signature to the class, defined as such:</p>
+<pre class="code"><span style="color: blue">public string </span>SayHello()
+{
+    <span style="color: blue">return </span><span style="color: #a31515">&quot;Hello from MyClass&quot;</span>;
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a>This time, the previous code will compile, and will print “Hello from MyClass” in the console.</p>
+<p>To access the explicitly implemented method, we have to go trough the interface, calling it as such:</p>
+<pre class="code"><span style="color: blue">var </span>p = (<span style="color: #2b91af">IMyInterface</span>)o;
+
+<span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;IMyInterface: {0}&quot;</span>, p.SayHello());</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>This will print “Hello from IMyInterface” in the console, as expected.</p>
+<p>The two primary purpose of explicit interface implementation, as described in the C# language specification, are twofold:</p>
+<blockquote>
+<ul>
+<li><em>Because explicit interface member implementations are not accessible through class or struct instances, they allow interface implementations to be excluded from the public interface of a class or struct. This is particularly useful when a class or struct implements an internal interface that is of no interest to a consumer of that class or struct. </em></li>
+<li><em>Explicit interface member implementations allow disambiguation of interface members with the same signature. Without explicit interface member implementations it would be impossible for a class or struct to have different implementations of interface members with the same signature and return type, as would it be impossible for a class or struct to have any implementation at all of interface members with the same signature but with different return types.</em></li>
+</ul>
+</blockquote>
+<p>On top of this, a common usage, as described in <a href="http://www.manning.com/skeet/">C# in Depth</a> (2.2.2, page 46), is to palliate the lack of covariant return types (the example is on <a href="http://msdn.microsoft.com/en-us/library/system.icloneable.aspx">IClonable</a> interface, see <a href="http://stackoverflow.com/questions/536349/why-no-icloneablet">this topic on Stack Overflow</a>).</p>
+<h3>C# 4.0 and dynamic keyword</h3>
+<p>With the new <em>dynamic</em> keyword in C# 4.0, a method call on a dynamic object is resolved at runtime. Is is therefore impossible to access the explicitly implemented member on a dynamic object.</p>
+<pre class="code"><span style="color: blue">dynamic </span>q = <span style="color: blue">new </span><span style="color: #2b91af">MyClass</span>();
+<span style="color: blue">dynamic </span>r = (<span style="color: #2b91af">IMyInterface</span>)q;
+
+<span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;MyClass: {0}&quot;</span>, q.SayHello());
+<span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;IMyInterface: {0}&quot;</span>, r.SayHello());</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>The above code will print “Hello from MyClass” twice, as <em>SayHello</em> is called on a object who’s runtime type is <em>MyClass</em>. The only way to access <em>IMyIntergace</em>’s <em>SayHello</em> implementation is to cast q or r to <em>IMyInterface</em> before the call:</p>
+<pre class="code"><span style="color: #2b91af">Console</span>.WriteLine(<span style="color: #a31515">&quot;IMyInterface: {0}&quot;</span>, ((<span style="color: #2b91af">IMyInterface</span>) q).SayHello());</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>

@@ -1,0 +1,121 @@
+---
+layout: post
+title: ! 'Code Kata: Kata Two'
+date: 2013-08-27 22:04:43.000000000 +02:00
+categories:
+- .NET
+tags:
+- C#
+- CodeKatas
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>I haven’t been coding much at work recently, so I decided that I need to <a href="http://www.codinghorror.com/blog/2009/03/sharpening-the-saw.html">sharpen the saw</a> a bit and exercise.</p>
+<p>I decided to start with some <a href="http://codekata.pragprog.com/">Code Kata</a>. The first one is somewhat an academical problem: <a href="http://codekata.pragprog.com/2007/01/kata_two_karate.html">implement binary search in five different ways</a>.</p>
+<p>Here is my first solution, the iterative way:</p>
+<pre class="code"><span style="color: black">        </span><span style="color: green">//Classic iterative method
+        </span><span style="color: blue">public int </span><span style="color: black">Chop1(</span><span style="color: blue">int </span><span style="color: black">element, </span><span style="color: #2b91af">IEnumerable</span><span style="color: black">&lt;</span><span style="color: blue">int</span><span style="color: black">&gt; collection)
+        {
+            </span><span style="color: green">//Empty collection -&gt; not found
+            </span><span style="color: blue">if </span><span style="color: black">(collection.Count() == 0) </span><span style="color: blue">return </span><span style="color: black">-1;
+
+            </span><span style="color: blue">var </span><span style="color: black">lower = 0;
+            </span><span style="color: blue">var </span><span style="color: black">upper = collection.Count() - 1;
+            </span><span style="color: blue">int </span><span style="color: black">index, candidate;
+
+            </span><span style="color: blue">while </span><span style="color: black">(lower != upper)
+            {
+                index = lower + ((upper - lower) / 2);
+                candidate = collection.ElementAt(index);
+
+                </span><span style="color: blue">if </span><span style="color: black">(candidate == element)
+                {
+                    </span><span style="color: blue">return </span><span style="color: black">index;
+                }
+                </span><span style="color: blue">else if </span><span style="color: black">(candidate &lt; element)
+                {
+                    lower = index + 1;
+                }
+                </span><span style="color: blue">else </span><span style="color: green">//if (candidate &gt; element)
+                </span><span style="color: black">{
+                    upper = index;
+                }
+            }
+
+            </span><span style="color: blue">return </span><span style="color: black">(collection.ElementAt(upper) == element) ? upper : -1;
+        }</span></pre>
+<p>I was actually scared at the time it took me. This is the kind of problem you are expected to solve in 5 minutes flat at university, but the lack of programming puzzles lately soften my brain. On the bright side, I challenged myself to get it right without compiling before being absolutely sure that the code would pass the tests, which it did. This involved some scratching paper to test the different corner cases, but I felt good when the green light of passing tests appeared.</p>
+<p>Here is my second solution, recursive and passing slices of the original array:</p>
+<pre class="code"><span style="color: black">        </span><span style="color: green">//Recursively passing smaller slices of the initial array
+        </span><span style="color: blue">public int </span><span style="color: black">Chop2(</span><span style="color: blue">int </span><span style="color: black">element, </span><span style="color: #2b91af">IEnumerable</span><span style="color: black">&lt;</span><span style="color: blue">int</span><span style="color: black">&gt; collection)
+        {
+            </span><span style="color: green">//Empty collection -&gt; not found
+            </span><span style="color: blue">if </span><span style="color: black">(collection.Count() == 0) </span><span style="color: blue">return </span><span style="color: black">-1;
+
+            </span><span style="color: blue">var </span><span style="color: black">index = collection.Count() / 2;
+            </span><span style="color: blue">var </span><span style="color: black">candidate = collection.ElementAt(index);
+
+            </span><span style="color: blue">if </span><span style="color: black">(candidate == element)
+            {
+                </span><span style="color: blue">return </span><span style="color: black">index;
+            }
+            </span><span style="color: blue">else if </span><span style="color: black">(candidate &lt; element)
+            {
+                </span><span style="color: blue">var </span><span style="color: black">offset = index + 1;
+                </span><span style="color: blue">var </span><span style="color: black">position = Chop2(element, collection.Skip(index + 1));
+                </span><span style="color: blue">return </span><span style="color: black">position &gt; -1 ? offset + position : -1;
+            }
+            </span><span style="color: blue">else </span><span style="color: green">//if (candidate &gt; element)
+            </span><span style="color: black">{
+                </span><span style="color: blue">return </span><span style="color: black">Chop2(element, collection.Take(index));
+            }
+        }</span></pre>
+<p>After finishing this one, I started thinking about it and found it very funny that this came more naturally than a recursive function using boundaries inside the array. I tend to use LINQ a lot when I code in C#, and I guess this is where it shows. The good news is that this led me to the third possible solution, which would have been second if I was just out of university.</p>
+<p>Third solution, recursive and passing arrays boundaries:</p>
+<pre class="code"><span style="color: black">        </span><span style="color: green">//Classic recursive method, passing boundaries around
+        </span><span style="color: blue">public int </span><span style="color: black">Chop3(</span><span style="color: blue">int </span><span style="color: black">element, </span><span style="color: #2b91af">IEnumerable</span><span style="color: black">&lt;</span><span style="color: blue">int</span><span style="color: black">&gt; collection)
+        {
+            </span><span style="color: green">//Empty collection -&gt; not found
+            </span><span style="color: blue">if </span><span style="color: black">(collection.Count() == 0) </span><span style="color: blue">return </span><span style="color: black">-1;
+
+            </span><span style="color: blue">return </span><span style="color: black">SubChop3(element, collection, 0, collection.Count() - 1);
+        }
+        </span><span style="color: green">//...and its sub method required for passing boundaries around
+        </span><span style="color: blue">private int </span><span style="color: black">SubChop3(</span><span style="color: blue">int </span><span style="color: black">element, </span><span style="color: #2b91af">IEnumerable</span><span style="color: black">&lt;</span><span style="color: blue">int</span><span style="color: black">&gt; collection, </span><span style="color: blue">int </span><span style="color: black">lower, </span><span style="color: blue">int </span><span style="color: black">upper)
+        {
+            </span><span style="color: green">//End case: lower == upper
+            </span><span style="color: blue">if </span><span style="color: black">(lower == upper)
+            {
+                </span><span style="color: blue">if </span><span style="color: black">(collection.ElementAt(lower) == element) </span><span style="color: blue">return </span><span style="color: black">lower;
+                </span><span style="color: blue">else return </span><span style="color: black">-1;
+            }
+
+            </span><span style="color: blue">var </span><span style="color: black">index = lower + ((upper - lower) / 2);
+            </span><span style="color: blue">var </span><span style="color: black">candidate = collection.ElementAt(index);
+
+            </span><span style="color: blue">if </span><span style="color: black">(candidate == element)
+            {
+                </span><span style="color: blue">return </span><span style="color: black">index;
+            }
+            </span><span style="color: blue">else if </span><span style="color: black">(candidate &lt; element)
+            {
+                </span><span style="color: blue">return </span><span style="color: black">SubChop3(element, collection, index + 1, upper);
+            }
+            </span><span style="color: blue">else </span><span style="color: green">//if (candidate &gt; element)
+            </span><span style="color: black">{
+                </span><span style="color: blue">return </span><span style="color: black">SubChop3(element, collection, lower, index);
+            }
+        }</span></pre>
+<p>Nothing too fancy here.</p>
+<p>I don’t have a 4 and 5 yet, but I already have one idea that is very challenging: <a href="http://blogs.msdn.com/b/ericlippert/archive/2010/10/21/continuation-passing-style-revisited-part-one.aspx">continuation passing style</a>. I was also tempted to implement one version using TPL, but it wouldn’t be very different from the recursive methods, so I am not sure… Maybe using a <a href="http://msdn.microsoft.com/en-us/library/dd997411.aspx">custom partitioner</a>?</p>

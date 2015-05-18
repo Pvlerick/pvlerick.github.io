@@ -1,0 +1,69 @@
+---
+layout: post
+title: Value Types Initialisation
+date: 2009-11-20 21:49:17.000000000 +01:00
+categories: []
+tags: []
+status: publish
+type: post
+published: true
+meta: {}
+author:
+  login: admin
+  email: pvlerick@gmail.com
+  display_name: Philippe
+  first_name: Philippe
+  last_name: Vlérick
+excerpt: !ruby/object:Hpricot::Doc
+  options: {}
+---
+<p>Value Types are a bit special. I won’t go down to the basics, but the differ from Reference Types by holding directly a value instead of a reference.</p>
+<p>There are two interesting cases that I’m going to elaborate on. They pretty much make sense, but a little explanation cannot hurt.</p>
+<h3>Prelude</h3>
+<p>Here is a very simple <em>struct</em> that I will use to demonstrate my point:</p>
+<pre class="code"><span style="color: blue">struct </span><span style="color: #2b91af">DaysAndHours
+</span>{
+    <span style="color: blue">public int </span>Days { <span style="color: blue">get</span>; <span style="color: blue">private set</span>; }
+    <span style="color: blue">public int </span>Hours { <span style="color: blue">get</span>; <span style="color: blue">private set</span>; }
+
+    <span style="color: blue">public override string </span>ToString()
+    {
+        <span style="color: blue">return </span><span style="color: #2b91af">String</span>.Format(<span style="color: #a31515">&quot;{0} day(s) and {1} hour(s)&quot;</span>, Days, Hours);
+    }
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>Notes:</p>
+<ul>
+<li>Structs cannot have custom default (parameter less) constructors. They however can have other custom constructors. This means that the default constructor can always be called, and that all the fields from the <em>struct</em> will be initialised at there default value; </li>
+<li>Overriding the <em>ToString</em> method is a good idea. It’s always a good idea, even more with a <em>struct</em> as this will prevent boxing of the variable when <em>ToString</em> called. </li>
+</ul>
+<h3>The “unassigned” Value Type</h3>
+<p>Now, let’s say that I declare a variable of this type, and never assign it. The normal rules of the compiler will apply:</p>
+<ul>
+<li>When you declare a variable somewhere, without initialising it, the compiler will issue a warning saying that the variable is declared but never used. </li>
+<li>If you try to access one of it’s field, it will issue an error saying that the variable cannot be used because it is unassigned. </li>
+</ul>
+<p>However, if you run the debugger, you can see the variable’s content. If it was a Reference Type, it would be null, but in this case, you can see all that the content is there, with all the fields being at their default value:</p>
+<p><img title="StructsInitialisation01" style="border-top-width: 0px; display: block; border-left-width: 0px; float: none; border-bottom-width: 0px; margin-left: auto; margin-right: auto; border-right-width: 0px" height="75" alt="StructsInitialisation01" src="assets/StructsInitialisation01.png" width="311" border="0" /></p>
+<p>The trick is that, when declaring the variable <em>dh</em>, the instance is allocated on the stack. However, the C# compiler don’t let you do that and wants to make sure you called the <em>new</em> keyword for that value type.</p>
+<h3>The Backing Field&#160; Issue</h3>
+<p>In my <em>struct</em>, I lazily used automatically implemented properties that were introduced in C# 3. This leads to a compiler error when using a custom constructor like this one:</p>
+<pre class="code"><span style="color: blue">public </span>DaysAndHours(<span style="color: blue">int </span>days, <span style="color: blue">int </span>hours)
+{
+    Days = days;
+    Hours = hours;
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<p>The compiler will report the following error:</p>
+<blockquote>
+<p><em>Backing field for automatically implemented property 'DaysAndHours.Days' must be fully assigned before control is returned to the caller. Consider calling the default constructor from a constructor initializer.</em></p>
+</blockquote>
+<p>This makes a lot of sense, as the backing fields for these properties have not been initialized. However, we cannot access the backing field, so we cannot initialize the field. Hopefully, the default parameter less constructor will do that, so calling it is sufficient to make sure the backing fields are initialized:</p>
+<pre class="code"><span style="color: blue">public </span>DaysAndHours(<span style="color: blue">int </span>days, <span style="color: blue">int </span>hours) : <span style="color: blue">this</span>()
+{
+    Days = days;
+    Hours = hours;
+}</pre>
+<p><a href="http://11011.net/software/vspaste"></a></p>
+<h3>Conclusion</h3>
+<p>Always remember that you cannot prevent a <em>struct</em> to be constructed using the default constructor, that has the same visibility as the <em>struct</em> itself. If you are using automatic properties, you have to explicitly call the default constructor in order to initialise the backing fields as you can’t access them directly.</p>
