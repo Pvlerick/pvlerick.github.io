@@ -6,5 +6,5 @@ tagline: that's me
 {% include JB/setup %}
 
 {% for post in paginator.posts %}
-  {% include post.html %}
+  {% include /themes/{{theme}}/post.html %}
 {% endfor %}
