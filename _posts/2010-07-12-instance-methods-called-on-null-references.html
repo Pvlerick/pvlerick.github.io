@@ -22,7 +22,7 @@ author:
 excerpt: !ruby/object:Hpricot::Doc
   options: {}
 ---
-<p>In a <a href="http://www.pvle.be/2008/11/extension-methods-and-null-objects/">previous post</a>, I wrote how you can call Extension Methods on null references, as in fact the are static methods with one more parameter, the extended object itself.</p>
+<p>In a <a href="/2008/11/extension-methods-and-null-objects/">previous post</a>, I wrote how you can call Extension Methods on null references, as in fact the are static methods with one more parameter, the extended object itself.</p>
 <p>I’m currently reading CLR via C# (which is a fascinating read), and I was surprised to learn in chapter 6 how the CIL instructions <em>call</em> and <em>callvirt</em> actually work.</p>
 <p>What is amazing is that for methods called with the <em>call</em> instruction, the CLR does not check if the referenced object is null. The method call will succeed, but the <em>this</em> reference will be null in the instance method. Actually, in both cases, the reference to the object that the method was called on is passed as a hidden parameter to the method.</p>
 <p>Before examining this, another interesting fact is the that the C# compiler mostly emits <em>callvirt</em> instructions when calling a method, which checks if the reference is null. To test the call instruction easily, we will have to disassemble, modify then reassemble the following code:</p>

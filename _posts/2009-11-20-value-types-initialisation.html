@@ -44,7 +44,7 @@ excerpt: !ruby/object:Hpricot::Doc
 <li>If you try to access one of it’s field, it will issue an error saying that the variable cannot be used because it is unassigned. </li>
 </ul>
 <p>However, if you run the debugger, you can see the variable’s content. If it was a Reference Type, it would be null, but in this case, you can see all that the content is there, with all the fields being at their default value:</p>
-<p><img title="StructsInitialisation01" style="border-top-width: 0px; display: block; border-left-width: 0px; float: none; border-bottom-width: 0px; margin-left: auto; margin-right: auto; border-right-width: 0px" height="75" alt="StructsInitialisation01" src="assets/StructsInitialisation01.png" width="311" border="0" /></p>
+<p><img title="StructsInitialisation01" style="border-top-width: 0px; display: block; border-left-width: 0px; float: none; border-bottom-width: 0px; margin-left: auto; margin-right: auto; border-right-width: 0px" height="75" alt="StructsInitialisation01" src="/assets/StructsInitialisation01.png" width="311" border="0" /></p>
 <p>The trick is that, when declaring the variable <em>dh</em>, the instance is allocated on the stack. However, the C# compiler don’t let you do that and wants to make sure you called the <em>new</em> keyword for that value type.</p>
 <h3>The Backing Field&#160; Issue</h3>
 <p>In my <em>struct</em>, I lazily used automatically implemented properties that were introduced in C# 3. This leads to a compiler error when using a custom constructor like this one:</p>

@@ -43,4 +43,4 @@ excerpt: !ruby/object:Hpricot::Doc
         || PublishingBuildInFields.ContainsKey(field.Id);
 }</pre>
 <p>Now, one interesting detail is that ToDictionary uses immediate execution, so we are sure to execute reflection calls only once, during the static constructor’s execution. This is important, because if we just built a sequence with Select, every time we could access that sequence the reflection code would execute, which is not a good idea in most cases.</p>
-<p><font color="#ff0000">Update</font>: follow up <a href="http://www.pvle.be/2011/02/more-on-isspbuiltinfield/">here</a>.</p>
+<p><font color="#ff0000">Update</font>: follow up <a href="/2011/02/more-on-isspbuiltinfield/">here</a>.</p>

@@ -56,5 +56,5 @@ excerpt: !ruby/object:Hpricot::Doc
 <li>By passing symbols to the compiler using the <a href="http://msdn.microsoft.com/en-us/library/0feaad6z.aspx">/define</a> command line argument. This is much more flexible, as you can use the same code for debug and production code. </li>
 </ul>
 <p>One last thing that is quite interesting. Visual Studio automatically defines DEBUG and TRACE symbols in Debug configuration, while it only defines TRACE symbol in Release configuration. This can, however, be changed by going in the project properties page, in the <em>Debug</em> section:</p>
-<p><img style="align: center" height="171" alt="Visual Studio Project properties Build section" src="assets/vspreprocessor1.png" width="377" border="0" /></p>
+<p><img style="align: center" height="171" alt="Visual Studio Project properties Build section" src="/assets/vspreprocessor1.png" width="377" border="0" /></p>
 <p>So, by default, using the DEBUG symbol means that the surrounded code will be compiled in <em>Debug</em> mode, but ignored in <em>Release</em> mode.</p>
