@@ -22,12 +22,12 @@ excerpt: !ruby/object:Hpricot::Doc
 ---
 <h3>How to change the name of the Virtual Directory</h3>
 <p align="left">By default, when you create a Web Setup Project in Visual Studio, the name of the Virtual Directory it will deploy to is the name that you gave to the Web Setup Project. This can be changed in the property window of the &quot;Web Application Folder&quot; element. At the bottom of the property window, there is a property called <em>VirtualDirectory</em>. If you want the setup to install your application in a subdirectory, you can specify directories using the <strong>/</strong> character.</p>
-<p align="center"><a href="http://www.pvle.be/wp-content/2009/02/websetupvirtualdirectory.png"><img style="border-top-width: 0px; border-left-width: 0px; border-bottom-width: 0px; border-right-width: 0px" height="397" alt="WebSetupVirtualDirectory" src="assets/websetupvirtualdirectory-thumb.png" width="293" border="0" /></a> </p>
+<p align="center"><a href="/assets/websetupvirtualdirectory-thumb.png"><img style="border-top-width: 0px; border-left-width: 0px; border-bottom-width: 0px; border-right-width: 0px" height="397" alt="WebSetupVirtualDirectory" src="/assets/websetupvirtualdirectory-thumb.png" width="293" border="0" /></a> </p>
 <p align="left">Simple, but took me some time to find it (I don't use Web Setup Project very often I have to say).</p>
 <h3></h3>
 <h3>When I deploy (or when I run the Setup), some of the files are not copied</h3>
 <p align="left">I had this problem lately. My web project contained a <em>.scv</em> file, and the file was never copied to the IIS virtual directory when using the <em>Deploy...</em> option of Visual Studio, nor was it copied by the Web Setup Project. Actually, this has to do with the <em>Build Action</em> property of the file. If it is set to &quot;None&quot;, the file will not be copied. It has to be set to &quot;Content&quot; for the file to be copied as is.</p>
-<p align="center"><a href="http://www.pvle.be/wp-content/2009/02/filebuildaction.png"><img style="border-right: 0px; border-top: 0px; border-left: 0px; border-bottom: 0px" height="192" alt="FileBuildAction" src="assets/filebuildaction-thumb.png" width="291" border="0" /></a> </p>
+<p align="center"><a href="/assets/filebuildaction-thumb.png"><img style="border-right: 0px; border-top: 0px; border-left: 0px; border-bottom: 0px" height="192" alt="FileBuildAction" src="/assets/filebuildaction-thumb.png" width="291" border="0" /></a> </p>
 <p align="left">When I create a <em>.svc</em> file in my projects, I generally select &quot;Text File&quot; and name it with <em>svc</em> extension. By default, text files have their Build Action set to &quot;None&quot;.</p>
 <p align="left">Here are two links to articles that contain very useful information on Web Setup Projects:</p>
 <ul>

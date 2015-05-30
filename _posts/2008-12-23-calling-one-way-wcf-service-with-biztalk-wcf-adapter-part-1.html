@@ -26,7 +26,7 @@ excerpt: !ruby/object:Hpricot::Doc
 <blockquote><p>An important consideration is that the WCF send adapter is only compatible with request-reply operations even when used on one-way send ports. WCF service operations can return void but they shouldn&#8217;t be marked with IsOneWay=true if you want to call them from a WCF send port. </p>
 </blockquote>
 <p>This means that if an orchestration calls a service operation marked as One Way (hence not returning anything), the orchestration will continue and terminate fine, but the port that called the service will hang there for a response.</p>
-<p><a href="http://www.pvle.be/wp-content/2008/12/biztalkwcfhangingport.png"><img style="border-top-width: 0px; border-left-width: 0px; border-bottom-width: 0px; border-right-width: 0px" height="304" alt="BizTalkWcfHangingPort" src="assets/biztalkwcfhangingport-thumb.png" width="712" border="0" /></a> </p>
+<p><a href="/assets/biztalkwcfhangingport-thumb.png"><img style="border-top-width: 0px; border-left-width: 0px; border-bottom-width: 0px; border-right-width: 0px" height="304" alt="BizTalkWcfHangingPort" src="assets/biztalkwcfhangingport-thumb.png" width="712" border="0" /></a> </p>
 <p>With default settings, the process will try to call the service three more times before giving up raising some <a href="http://msdn.microsoft.com/en-us/library/system.servicemodel.communicationexception.aspx">CommunicationException</a>:</p>
 <blockquote><p>System.ServiceModel.CommunicationException: The server did not provide a meaningful reply; this might be caused by a contract mismatch, a premature session shutdown or an internal server error.</p>
 </blockquote>

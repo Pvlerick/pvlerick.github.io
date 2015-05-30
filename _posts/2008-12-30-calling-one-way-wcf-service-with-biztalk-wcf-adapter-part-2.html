@@ -22,7 +22,7 @@ author:
 excerpt: !ruby/object:Hpricot::Doc
   options: {}
 ---
-<p>As promised, here is the follow up of my previous post: <a href="http://www.pvle.be/2008/12/calling-one-way-wcf-service-with-biztalk-wcf-adapter-part-1/">Calling One Way WCF Service with BizTalk WCF Adapter, Part 1</a>.</p>
+<p>As promised, here is the follow up of my previous post: <a href="/2008/12/calling-one-way-wcf-service-with-biztalk-wcf-adapter-part-1/">Calling One Way WCF Service with BizTalk WCF Adapter, Part 1</a>.</p>
 <p>Let's do a qui recap: we want to create a WCF proxy that will call a one way web service and return an empty message to BizTalk so the messaging process doesn't timeout waiting for an answer.</p>
 <h3>The Interface</h3>
 <p>The first step is to create a service interface that is able to receive any message. This is done by</p>
@@ -84,7 +84,7 @@ excerpt: !ruby/object:Hpricot::Doc
 <p>Now that we have our service implementation, we can host it. I hosted it in IIS, as this is probably the best way to host WCF services and as this proxy should be running all the time. </p>
 <h3>BizTalk WCF Adapter Configuration</h3>
 <p>The last step is to make sure that your one way WCF adapter is calling the proxy. This is done by changing the address in the WCF Adapter configuration in your BizTalk project.</p>
-<p><a href="http://www.pvle.be/wp-content/2008/12/biztalkwcfadapterconfiguration1.png"><img style="border-top-width: 0px; border-left-width: 0px; border-bottom-width: 0px; border-right-width: 0px" height="584" alt="BizTalkWcfAdapterConfiguration" src="assets/biztalkwcfadapterconfiguration-thumb.png" width="424" border="0" /></a> </p>
+<p><a href="/assets/biztalkwcfadapterconfiguration1-thumb.png"><img style="border-top-width: 0px; border-left-width: 0px; border-bottom-width: 0px; border-right-width: 0px" height="584" alt="BizTalkWcfAdapterConfiguration" src="/assets/biztalkwcfadapterconfiguration-thumb.png" width="424" border="0" /></a> </p>
 <p>Once this is set (the SOAP Action header remains the same), you are ready to run you orchestration. You will see that the messaging process will no longer timeout, as our home made proxy will send an empty response message.</p>
 <h3>Improvements</h3>
 <p>Let's face it, this implementation is fine for a proof of concept, but it's hardly enough for a real application as only one endpoint is defined in the configuration.</p>
