@@ -6,5 +6,6 @@ tagline: that's me
 {% include JB/setup %}
 
 {% for post in paginator.posts %}
+  <h2>One, Two</h2>
   {% include post.html %}
 {% endfor %}
