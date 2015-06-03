@@ -20,4 +20,4 @@ excerpt: !ruby/object:Hpricot::Doc
   options: {}
 ---
 
-I don't keep an updated CV here, but if you are interested you can have a look at my profile on [Stack OVerflow Careers]:https://careers.stackoverflow.com/pvlerick.
+I don't keep an updated CV here, but if you are interested you can have a look at my profile on [Stack OVerflow Careers](https://careers.stackoverflow.com/pvlerick) or [LinkedIn](https://www.linkedin.com/in/pvlerick).
