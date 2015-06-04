@@ -86,7 +86,7 @@ Here is a list of books I have but that are not really meant to be read from cov
 #### [Framework Design Guidelines: Conventions, Idioms, and Patterns for Reusable .NET Libraries (2nd Edition)](http://www.amazon.com/Framework-Design-Guidelines-Conventions-Libraries/dp/0321545613/)
 A classic that every serious .NET developer should have at hands at all times.
 
-#### [http://www.amazon.com/gp/product/0321741765/">The C# Programming Language (Covering C# 4.0)]
+#### [The C# Programming Language (Covering C# 4.0)](http://www.amazon.com/gp/product/0321741765/)
 I'm a big fan of having the language's specs at hand, and this one comes with tons of insight from experts with it.
 
 #### [Microsoft Visual Studio Tips](http://www.amazon.com/Microsoft-Visual-Studio-Tips-Sara/dp/0735626405/ref=sr_1_1?ie=UTF8&amp;s=books&amp;qid=1239379570&amp;sr=1-1)
