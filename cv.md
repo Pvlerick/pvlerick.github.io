@@ -5,4 +5,9 @@ group: navigation
 type: page
 ---
 
-I don't keep an updated CV here, but if you are interested you can have a look at my profile on [Stack OVerflow Careers](https://careers.stackoverflow.com/pvlerick), on [GitHub](https://github.com/Pvlerick) or on [LinkedIn](https://www.linkedin.com/in/pvlerick).
+I don't keep an updated CV here, if you are interested please have a look at my profiles on [Stack Overflow Careers](https://careers.stackoverflow.com/pvlerick).
+
+You also have a look at my profiles on:
+ * [GitHub](https://github.com/Pvlerick)
+ * [Stack Overflow](http://stackoverflow.com/users/920/philippe)
+ * [LinkedIn](https://www.linkedin.com/in/pvlerick).
