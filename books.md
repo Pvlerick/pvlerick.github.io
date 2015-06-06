@@ -35,7 +35,7 @@ Expert .NET 2.0 IL Assembler, Writing High-Performance .NET Code, Expert F# 4.0
 ### On my Shelve - books I read
 
 #### [The Pragmatic Programmer: From Journeyman to Master](http://www.amazon.com/Pragmatic-Programmer-Journeyman-Master/dp/020161622X/)
-I was finally able to get around reading it. I was not dissapointed, but I felt that I should have read this earlier in my carreer.
+I was finally able to get around reading it. I was not dissapointed, but I felt that I should have read this earlier in my career.
 
 #### [Adaptive Code via C#: Agile coding with design patterns and SOLID principles](http://www.amazon.com/Adaptive-Code-via-principles-Developer/dp/0735683204/)
 Short and to the point, an excellent summary of "Agile Principles, Patterns, and Practices in C#".
