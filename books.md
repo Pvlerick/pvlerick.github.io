@@ -20,13 +20,34 @@ Programmer's Bible as they say. It's been a really good read from now on, and I 
 
 ### In the Pipeline - books I have but didn't read yet
 
-#### [C# in Depth, Second Edition](href="http://www.manning.com/skeet2/)
-Second edition of C# in Depth. I plan to read it completely again, I remember learning so much from the first edition that reviewing the whole content will certainly be a good thing.
+#### [CLR via C# (4th Edition)](http://www.amazon.com/CLR-via-4th-Developer-Reference/dp/0735667454/)
+I immensely enjoyed the third edition, I have no doubts I'll enjoy this one at least as much.
+
+#### [Pro NuGet](http://www.amazon.com/Pro-NuGet-Experts-Voice-NET/dp/1430260017/)
+Although I use NuGet now and then, I don't understand it as mush as I would like to. Let's hope this books remedies to that.
+
+#### Other books I own but I don't know if I'll get around reading them
+Windows Internals, The Joy of Clojure, Secrets of JavaScript Ninja, JavaSctipt: The Good Parts, Taming Text...
 
 #### Other books I plan to order
-Expert .NET 2.0 IL Assembler, Windows Internals, The Joy of Clojure, Secrets of JavaScript Ninja...
+Expert .NET 2.0 IL Assembler, Writing High-Performance .NET Code, Expert F# 4.0
 
 ### On my Shelve - books I read
+
+#### [The Pragmatic Programmer: From Journeyman to Master](http://www.amazon.com/Pragmatic-Programmer-Journeyman-Master/dp/020161622X/)
+I was finally able to get around reading it. I was not dissapointed, but I felt that I should have read this earlier in my carreer.
+
+#### [Adaptive Code via C#: Agile coding with design patterns and SOLID principles](http://www.amazon.com/Adaptive-Code-via-principles-Developer/dp/0735683204/)
+Short and to the point, an excellent summary of "Agile Principles, Patterns, and Practices in C#".
+
+#### [Agile Principles, Patterns, and Practices in C#](http://www.amazon.com/Agile-Principles-Patterns-Practices-C/dp/0131857258/)
+A classical book that I had to read - an excellent read on the overall. Unfortunately, the examples are a bit out-dated and could use some of the C# 3.0+ features to be neater and there are some mistakes here and there in the code.
+
+#### [C# in Depth, Second Edition](href="http://www.manning.com/skeet2/)
+Second edition of C# in Depth. Even if I read the first edition some time ago, the extra content and the re-reading was well worth it.
+
+#### [Dependency Injection in .NET](http://manning.com/seemann/)
+Eye opening on DI and well written, you cannot ask for more.
 
 #### [Brownfield Application Development in .NET](http://www.manning.com/baley)
 Very insightful book. The content is filled with practical advises that were clearly tested on the field. The approach is to slowly get an development project out of the mud and on track to make it a successful and enjoyable project.
