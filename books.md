@@ -10,29 +10,33 @@ On this page is the list of books I've read, the ones I'm currently reading and 
 
 If you have any suggestions, please let me know!
 
-### Next to my bed - books I'm reading
-
-#### [Real World Functional Programming](http://www.manning.com/petricek)
-A bit too far from what I'm doing now, but a very interesting read still. Very technical and functional, a lot on F#, so definitely an enjoyable to read if you are technical enough.
-
-#### [Code Complete](http://www.cc2e.com/)
-Programmer's Bible as they say. It's been a really good read from now on, and I getting slowly to the end. The kind of book you have to keep at hand when coding.
-
-### In the Pipeline - books I have but didn't read yet
+### Next to my bed (books I'm reading)
 
 #### [CLR via C# (4th Edition)](http://www.amazon.com/CLR-via-4th-Developer-Reference/dp/0735667454/)
 I immensely enjoyed the third edition, I have no doubts I'll enjoy this one at least as much.
 
-#### [Pro NuGet](http://www.amazon.com/Pro-NuGet-Experts-Voice-NET/dp/1430260017/)
-Although I use NuGet now and then, I don't understand it as mush as I would like to. Let's hope this books remedies to that.
+#### [Real World Functional Programming](http://www.manning.com/petricek)
+A bit too far from what I'm doing now, but a very interesting read still. Very technical and functional, a lot on F#, so definitely an enjoyable to read if you are technical enough.
+
+### In the Pipeline (books I have but didn't read yet)
+Nothing at the moment!
 
 #### Other books I own but I don't know if I'll get around reading them
-Windows Internals, The Joy of Clojure, Secrets of JavaScript Ninja, JavaSctipt: The Good Parts, Taming Text...
+Windows Internals, The Joy of Clojure, Secrets of JavaScript Ninja, JavaSctipt: The Good Parts, Taming Text
 
 #### Other books I plan to order
-Expert .NET 2.0 IL Assembler, Writing High-Performance .NET Code, Expert F# 4.0
+Expert .NET 2.0 IL Assembler, Expert F# 4.0, Programming Pearls, Clean Code, The Clean Coder, C# 6.0 in a Nutshell
 
-### On my Shelve - books I read
+### On the Shelve (books I read)
+
+#### [Writing High-Performance .NET Code](http://www.amazon.com/Writing-High-Performance-NET-Code-Watson/dp/0990583430/)
+An excellent read, the capter on garbage collection is a must read.
+
+#### [Pro NuGet](http://www.amazon.com/Pro-NuGet-Experts-Voice-NET/dp/1430260017/)
+Haven't finished it because it goes into use cases that I'm not likely to face in the near future, but I'll keep it at hand just in case.
+
+#### [Code Complete](http://www.cc2e.com/)
+Programmer's Bible as they say. Excellent read, I should probably read it again already.
 
 #### [The Pragmatic Programmer: From Journeyman to Master](http://www.amazon.com/Pragmatic-Programmer-Journeyman-Master/dp/020161622X/)
 I was finally able to get around reading it. I was not dissapointed, but I felt that I should have read this earlier in my career.
