@@ -5,8 +5,6 @@ date: 2015-09-20
 tags : [C#]
 published: false
 ---
-{% include JB/setup %}
- 
 # Why Use the Maybe<T> in Your Code?
 
 The Maybe monad in C# has been around for quite some time in various forms, with some recommandations to use it in your code.
