@@ -68,7 +68,9 @@ internal class Program
 
 It's interesting to look at the whole code, because as pointed out in the Pluralsight course, the compiler looks for a `FormattableStringFactory.Create` static method in the `System.Runtime.CompilerServices`. This is how `FormattableString` can be back ported in earlier version than .NET 4.6.
 
-Now, let's see what happens when there is an overload that takes a `String`:
+### An Overload that Takes a String
+
+Let's see what happens when there is an overload that takes a `String`:
 
 {% highlight csharp linenos %}
 class Program
@@ -168,6 +170,8 @@ internal class Program
 }
 {% endhighlight %}
  
+### Forcing the Compiler to Choose the Overload that Takes a FormattableString? 
+ 
  Now, would there be a way to _force_  the compiler into calling the `FormattableString` overload instead of the `String` overload? That would be quite nice because it would then allow us to process the `FormattableString` further before it is rendered as a `String`; while still keeping a `String` overload for those that simply want to send a `String`.
  
  My first naïve attempt was to change the signature of the `String` version and add `params object[]` to try to fool the compiler to call the `FormattableString` overload as it has fewer arguments:
@@ -198,7 +202,11 @@ But this is a failure, the `String` overload is still being called, and the comp
 Program.Print(string.Format("Hello today {0}", DateTime.Today), Array.Empty<object>());
 {% endhighlight %}
 
-What if the `String` overload was an extension method? In essence, I'm trying to make the `String` overload more _distant_, a less likable choice to the compiler, if you will. We have to change our code a bit to make it all work on instances, but if that works it'll be worth it:
+### Making the String Overload an Extension Method
+
+What if the `String` overload was an extension method? In essence, I'm trying to make the `String` overload more _distant_, a less likable choice to the compiler, if you will. We know from previous versions of the C# language specifications (C# 6.0 specs not being out yet) that an extension method are less likely to be picked.
+
+We have to change our code a bit to make it all work on instances, but if that works it'll be worth it:
 
 {% highlight csharp linenos %}
 class Program
