@@ -1,10 +1,9 @@
-
 ---
 layout: post
 type : post
 title : Running a .NET Core ConsoleApp in Docker
 date: 2017-02-18
-tags : [C#]
+tags : [C#, Docker]
 published: true
 ---
 Whie fiddlingz with Docker and .NET Core, I was unable to locate a clear and concise tutorial that would explain what are the steps to create a Docker image with a simple .NET Core ConsoleApp and how to run it properly.
