@@ -4,7 +4,7 @@ title: About
 group: navigation
 type: page
 ---
-My name is Philippe Vlérick. I’m a developer passionated about C# and F# and about everything that revolves arount the .NET framework.
+My name is Philippe Vlérick. I’m a developer passionated about C# and everything that revolves arount the .NET framework/platform.
 
 I live in [Belgium](http://maps.google.com/maps?f=q&amp;hl=en&amp;geocode=&amp;q=Belgium&amp;ie=UTF8&amp;ll=50.503887,4.469936&amp;spn=10.62918,23.203125&amp;z=6&amp;om=0). My mother tongue is French, but I mainly write in English as it has broader audience and because ["If you don't know English, you're not a programmer."](http://www.hanselman.com/blog/DoYouHaveToKnowEnglishToBeAProgrammer.aspx)
 
