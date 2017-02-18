@@ -12,7 +12,7 @@ As I am trying to learn Docker, I'd like to understand the basics; as oposed to 
 
 Let's first build a very simple ConsoleApp. I used the "Console App (.NET Core)" template in Visual Studio 2017 RC and then setting it to target the NetCoreApp 1.1 Framework (project's Properties > Target framework). The app will display a random quote from our friend Duke Nukem. You can find the content of the quotes.json file [here](https://gist.github.com/Pvlerick/0765e5c6fc389444380aa44860de96e0).
 
-```CSharp
+```csharp
 using Newtonsoft.Json;
 using System;
 using System.IO;
@@ -50,7 +50,7 @@ In our case, as we are running Docker with Windows Containers, we need an image 
 
 We can finally write our Dockerfile:
 
-```Dockerfile
+```dockerfile
 FROM microsoft/dotnet:1.1-runtime-nanoserver
 
 WORKDIR /app
