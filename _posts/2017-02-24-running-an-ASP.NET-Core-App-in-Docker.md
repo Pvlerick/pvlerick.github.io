@@ -2,7 +2,7 @@
 layout: post
 type : post
 title : Running an ASP.NET Core App in Docker
-date: 2017-02-XX
+date: 2017-02-24
 tags : [C#, ASP.NET Core, Docker]
 published: true
 ---
