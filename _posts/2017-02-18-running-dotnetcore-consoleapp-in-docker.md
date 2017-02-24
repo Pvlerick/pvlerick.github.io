@@ -13,27 +13,20 @@ As I am trying to learn Docker, I'd like to understand the basics; as oposed to 
 Let's first build a very simple ConsoleApp. I used the "Console App (.NET Core)" template in Visual Studio 2017 RC and then setting it to target the NetCoreApp 1.1 Framework (project's Properties > Target framework). The app will display a random quote from our friend Duke Nukem. You can find the content of the quotes.json file [here](https://gist.github.com/Pvlerick/0765e5c6fc389444380aa44860de96e0).
 
 ```csharp
-using Newtonsoft.Json;
-using System;
-using System.IO;
-
-namespace DockerDotNetCoreApp
+class Program
 {
-    class Program
+    public static void Main(string[] args)
     {
-        public static void Main(string[] args)
-        {
-            var content = JsonConvert.DeserializeObject<Content>(File.ReadAllText("quotes.json"));
+        var content = JsonConvert.DeserializeObject<Content>(File.ReadAllText("quotes.json"));
 
-            var r = new Random().Next(content.Quotes.Length);
+        var r = new Random().Next(content.Quotes.Length);
 
-            Console.WriteLine(content.Quotes[r]);
-        }
+        Console.WriteLine(content.Quotes[r]);
+    }
 
-        public class Content
-        {
-            public string[] Quotes { get; set; }
-        }
+    public class Content
+    {
+        public string[] Quotes { get; set; }
     }
 }
 ```
@@ -104,5 +97,7 @@ docker rmi duke
 ```
 
 Up next, same thing for an ASP.NET Core app targeting the .NET 4.6.2 Framework!
+
+You can find the full sources here: https://github.com/Pvlerick/DockerSandbox/tree/master/DockerDotNetCoreApp
 
 > Written with [StackEdit](https://stackedit.io/).
