@@ -98,6 +98,6 @@ docker rmi duke
 
 Up next, same thing for an ASP.NET Core app targeting the .NET 4.6.2 Framework!
 
-You can find the full sources here: https://github.com/Pvlerick/DockerSandbox/tree/master/DockerDotNetCoreApp
+You can find the [full sources here](https://github.com/Pvlerick/DockerSandbox/tree/master/DockerDotNetCoreApp).
 
 > Written with [StackEdit](https://stackedit.io/).
