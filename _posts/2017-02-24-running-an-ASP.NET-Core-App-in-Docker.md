@@ -121,7 +121,11 @@ docker build -t duke-quotes .
 
 ### Running it in Docker
 
-Now that our image is ready, all that is left is to make a container out of it. We'll give it a specific IP address on the network for convenience:
+Now that our image is ready, all that is left is to make a container out of it. We'll give it a specific IP address on the network for convenience.
+
+Docker has a set of default networks (```docker network ls``` to list them), the easiest is to us an address that is in the range of the ```nat``` network - we can see that range by using the ```docker network inspect nat``` command.
+
+Let's pick an address in that range and run out container with that specific IP address:
 
 ```
 docker run -d --net nat --ip 172.18.64.42 --name duke-quotes-c duke-quotes
